@@ -8,16 +8,17 @@
 -- Output:
 --   angle_deg,torque_nm CSV for validation/integration.
 
-openfemm()
-opendocument("geometry/pm_gradient_motor_base.fem")
+open("geometry/pm_gradient_motor_base.fem")
 
-csv = open("data/field_sim/femm_torque_angle.csv", "w")
+csv = assert(io.open("data/field_sim/femm_torque_angle.csv", "w"))
 csv:write("angle_deg,torque_nm\n")
+csv:flush()
 
 previous_angle = 0
 for angle_deg = 0, 360, 2 do
   delta_angle = angle_deg - previous_angle
   if delta_angle ~= 0 then
+    mi_seteditmode("group")
     mi_selectgroup(2)
     mi_moverotate(0.0, 0.0, delta_angle)
     mi_clearselected()
@@ -29,8 +30,8 @@ for angle_deg = 0, 360, 2 do
   torque_nm = mo_blockintegral(22)
   mo_clearblock()
   csv:write(string.format("%g,%.12g\n", angle_deg, torque_nm))
+  csv:flush()
   previous_angle = angle_deg
 end
 
 csv:close()
-closefemm()

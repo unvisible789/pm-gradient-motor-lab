@@ -51,16 +51,17 @@ def render_femm_lua(config: dict[str, Any]) -> str:
 -- Output:
 --   angle_deg,torque_nm CSV for validation/integration.
 
-openfemm()
-opendocument({base_fem_file})
+open({base_fem_file})
 
-csv = open({output_csv}, "w")
+csv = assert(io.open({output_csv}, "w"))
 csv:write("angle_deg,torque_nm\\n")
+csv:flush()
 
 previous_angle = 0
 for angle_deg = {min_angle}, {max_angle}, {angle_step} do
   delta_angle = angle_deg - previous_angle
   if delta_angle ~= 0 then
+    mi_seteditmode("group")
     mi_selectgroup({rotor_group})
     mi_moverotate({center_x}, {center_y}, delta_angle)
     mi_clearselected()
@@ -72,11 +73,11 @@ for angle_deg = {min_angle}, {max_angle}, {angle_step} do
   torque_nm = mo_blockintegral(22)
   mo_clearblock()
   csv:write(string.format("%g,%.12g\\n", angle_deg, torque_nm))
+  csv:flush()
   previous_angle = angle_deg
 end
 
 csv:close()
-closefemm()
 """
 
 

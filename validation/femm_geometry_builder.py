@@ -84,8 +84,18 @@ def _arc_segment_lua(
         "outer_end": _polar(outer_radius, end),
         "inner_start": _polar(inner_radius, start),
         "inner_end": _polar(inner_radius, end),
+        "outer_mid": _polar(outer_radius, center_angle),
+        "inner_mid": _polar(inner_radius, center_angle),
         "label": _polar(label_radius, center_angle),
     }
+    radial_start_mid = (
+        (points["outer_start"][0] + points["inner_start"][0]) / 2.0,
+        (points["outer_start"][1] + points["inner_start"][1]) / 2.0,
+    )
+    radial_end_mid = (
+        (points["outer_end"][0] + points["inner_end"][0]) / 2.0,
+        (points["outer_end"][1] + points["inner_end"][1]) / 2.0,
+    )
     mag_dir = 0.0 if magnetization_deg is None else magnetization_deg
     material_lua = _lua_string(material)
     return f"""
@@ -93,6 +103,18 @@ add_arc_segment({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, 
 add_arc_segment({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f}, {arc_deg:.6f}, 1)
 add_line({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f})
 add_line({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['outer_end'][0]:.6f}, {points['outer_end'][1]:.6f})
+mi_selectarcsegment({points['outer_mid'][0]:.6f}, {points['outer_mid'][1]:.6f})
+mi_setarcsegmentprop(1, "<None>", 0, {group})
+mi_clearselected()
+mi_selectarcsegment({points['inner_mid'][0]:.6f}, {points['inner_mid'][1]:.6f})
+mi_setarcsegmentprop(1, "<None>", 0, {group})
+mi_clearselected()
+mi_selectsegment({radial_start_mid[0]:.6f}, {radial_start_mid[1]:.6f})
+mi_setsegmentprop("<None>", 0, 1, 0, {group})
+mi_clearselected()
+mi_selectsegment({radial_end_mid[0]:.6f}, {radial_end_mid[1]:.6f})
+mi_setsegmentprop("<None>", 0, 1, 0, {group})
+mi_clearselected()
 mi_addblocklabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
 mi_selectlabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
 mi_setblockprop({material_lua}, 1, 0, "<None>", {mag_dir:.6f}, {group}, {turns})
@@ -116,7 +138,6 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     lines = [
         "-- PM Gradient Motor Lab FEMM geometry builder",
         "-- Radial-flux 2D approximation of the described disc/axial concept.",
-        "openfemm()",
         "newdocument(0)",
         f'mi_probdef(0, "millimeters", "planar", 1e-8, {float(config["depth_mm"]):.6f}, 30)',
         "",
@@ -145,14 +166,20 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         "-- Air boundary",
         f"mi_drawarc({float(config['air_boundary_radius_mm']):.6f}, 0, {-float(config['air_boundary_radius_mm']):.6f}, 0, 180, 2)",
         f"mi_drawarc({-float(config['air_boundary_radius_mm']):.6f}, 0, {float(config['air_boundary_radius_mm']):.6f}, 0, 180, 2)",
-        "mi_addblocklabel(0, 0)",
-        "mi_selectlabel(0, 0)",
+        f"mi_addblocklabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
+        f"mi_selectlabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
         'mi_setblockprop("Air", 1, 0, "<None>", 0, 0, 0)',
         "mi_clearselected()",
         "",
         "-- Rotor core",
         f"mi_drawarc({float(config['rotor_core_radius_mm']):.6f}, 0, {-float(config['rotor_core_radius_mm']):.6f}, 0, 180, 2)",
         f"mi_drawarc({-float(config['rotor_core_radius_mm']):.6f}, 0, {float(config['rotor_core_radius_mm']):.6f}, 0, 180, 2)",
+        f"mi_selectarcsegment(0, {float(config['rotor_core_radius_mm']):.6f})",
+        "mi_setarcsegmentprop(2, \"<None>\", 0, rotor_group)",
+        "mi_clearselected()",
+        f"mi_selectarcsegment(0, {-float(config['rotor_core_radius_mm']):.6f})",
+        "mi_setarcsegmentprop(2, \"<None>\", 0, rotor_group)",
+        "mi_clearselected()",
         "mi_addblocklabel(10, 0)",
         "mi_selectlabel(10, 0)",
         f"mi_setblockprop({_lua_string(rotor_core_material)}, 1, 0, \"<None>\", 0, rotor_group, 0)",
@@ -189,11 +216,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 arc_deg=float(config["eml_arc_deg"]),
                 inner_radius=float(config["stator_inner_radius_mm"]),
                 outer_radius=float(config["stator_outer_radius_mm"]),
-                label_radius=(
-                    float(config["stator_inner_radius_mm"])
-                    + float(config["stator_outer_radius_mm"])
-                )
-                / 2.0,
+                label_radius=float(config["stator_inner_radius_mm"]) + 4.0,
                 material=stator_core_material,
                 group=stator_group,
             )
@@ -218,7 +241,6 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
             "",
             "mi_zoomnatural()",
             f"mi_saveas({output_fem_file})",
-            "closefemm()",
         ]
     )
     return "\n".join(lines) + "\n"

@@ -3,3 +3,6 @@ __pycache__/
 .venv/
 venv/
 .DS_Store
+*.ans
+data/field_sim/femm_smoke*
+data/field_sim/*_smoke.csv
