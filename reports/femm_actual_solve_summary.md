@@ -36,6 +36,29 @@ Additional FEMM sweeps were run to test whether the positive work result survive
 
 The positive result stays in the rough range of 0.90-0.96 J/rev across these checks. That means the result is repeatable in this simplified FEMM setup, but it is still small relative to the torque ripple of about +/-18 Nm and must not be treated as a build-proven result.
 
+## Anti-Cancellation Geometry Update
+
+A first anti-cancellation pass was added after the baseline run:
+
+- narrowed rotor pole arc from 12 deg to 10 deg;
+- kept full radial magnet area from 120-145 mm to avoid killing useful torque;
+- narrowed EML face arc from 18 deg to 14 deg;
+- kept EML offset at 0 deg after offset sweeps showed this was the best candidate;
+- added optional parameters for outer pole caps, rotor flux barriers, and stator relief slots, but left them disabled by default because early barrier/relief cuts created FEMM unlabeled-region failures that need more careful CAD-style construction.
+
+Best validated anti-cancellation candidate:
+
+| Sweep | Span | Step | Points | Integrated work | Full-rev equivalent | Average torque | Peak positive | Peak negative |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `femm_torque_angle_arc10_offset0_period45_step1.csv` | 45 deg | 1 deg | 46 | 0.174545 J | 1.396362 J/rev | 0.222238 Nm | 6.597095 Nm | -6.206311 Nm |
+
+Compared with the previous 45 deg baseline, the full-rev equivalent improved from 0.902928 J/rev to 1.396362 J/rev, about +54.6%. Peak negative torque was reduced from -17.658 Nm to -6.206 Nm, but peak positive torque was also reduced from 17.985 Nm to 6.597 Nm. This is a better net/less-cancellation shape, not a high-torque final design.
+
+Suggested pulse windows from the improved 45 deg period:
+
+- pulse/assist: 0-11.4 deg, 22.4-34.1 deg, and the wrap region around 44.8-45/0 deg;
+- lockout/no-pulse: 11.4-22.4 deg and 34.1-44.8 deg.
+
 ## Interpretation
 
 The simplified FEMM run produced a small positive closed-cycle work value. That is not yet proof of excess energy or a buildable motor effect. At this stage it should be treated as a source-accounting and numerical-model finding that needs harder validation.

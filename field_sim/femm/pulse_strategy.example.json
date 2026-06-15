@@ -1,0 +1,40 @@
+{
+  "strategy": "selective_position_based",
+  "description": "Only pulse an EML when the rotor angle is inside a measured or simulated positive-torque window for that EML. Do not pulse in negative torque windows.",
+  "eml_angular_offset_deg": 0.0,
+  "positive_torque_windows_per_45deg_period": [
+    {
+      "start_deg": 0.0,
+      "end_deg": 11.4
+    },
+    {
+      "start_deg": 22.4,
+      "end_deg": 34.1
+    },
+    {
+      "start_deg": 44.8,
+      "end_deg": 45.0
+    }
+  ],
+  "negative_torque_lockout_windows_per_45deg_period": [
+    {
+      "start_deg": 11.4,
+      "end_deg": 22.4
+    },
+    {
+      "start_deg": 34.1,
+      "end_deg": 44.8
+    }
+  ],
+  "current_density_ma_per_mm2": 0.0,
+  "candidate_eml_counts": [
+    6,
+    8
+  ],
+  "notes": [
+    "Windows were initialized from femm_torque_angle_arc10_offset0_period45_step1.csv.",
+    "Update windows from FEMM torque-angle CSV after each geometry run.",
+    "Pulse one EML, or a small overlapping subset, only during positive net torque.",
+    "Subtract coil input energy and add only measured/reasonable flyback recovery."
+  ]
+}

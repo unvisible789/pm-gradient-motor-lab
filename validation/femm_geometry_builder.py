@@ -14,16 +14,26 @@ def default_geometry_config() -> dict[str, Any]:
     return {
         "model_name": "pm_gradient_motor_base",
         "output_fem_file": "geometry/pm_gradient_motor_base.fem",
+        "design_variant": "anti_cancellation_v1",
         "rotor_diameter_mm": 300.0,
         "rotor_core_radius_mm": 110.0,
         "rotor_magnet_inner_radius_mm": 120.0,
-        "rotor_magnet_outer_radius_mm": 145.0,
+        "rotor_magnet_mid_radius_mm": 145.0,
+        "rotor_magnet_outer_radius_mm": 146.0,
         "rotor_gradient_count": 16,
-        "rotor_magnet_arc_deg": 12.0,
+        "rotor_magnet_arc_deg": 10.0,
+        "rotor_outer_pole_cap_arc_deg": 0.0,
+        "rotor_outer_pole_cap_offset_deg": 2.0,
+        "rotor_flux_barrier_inner_radius_mm": 76.0,
+        "rotor_flux_barrier_outer_radius_mm": 106.0,
+        "rotor_flux_barrier_arc_deg": 0.0,
         "stator_inner_radius_mm": 158.0,
         "stator_outer_radius_mm": 205.0,
         "eml_unit_count": 8,
-        "eml_arc_deg": 18.0,
+        "eml_arc_deg": 14.0,
+        "eml_angular_offset_deg": 0.0,
+        "stator_flux_relief_arc_deg": 0.0,
+        "stator_flux_relief_offset_deg": -9.0,
         "air_boundary_radius_mm": 260.0,
         "depth_mm": 25.0,
         "rotor_group": 2,
@@ -41,8 +51,11 @@ def default_geometry_config() -> dict[str, Any]:
 def validate_geometry_config(config: dict[str, Any]) -> None:
     if float(config["rotor_diameter_mm"]) <= 0:
         raise ValueError("rotor_diameter_mm must be positive")
-    if int(config["rotor_gradient_count"]) != int(config["eml_unit_count"]) * 2:
-        raise ValueError("Expected a 2:1 rotor-gradient to EML ratio")
+    eml_count = int(config["eml_unit_count"])
+    if eml_count not in {6, 8}:
+        raise ValueError("eml_unit_count must be 6 or 8 for the current optimizer")
+    if eml_count == 8 and int(config["rotor_gradient_count"]) != eml_count * 2:
+        raise ValueError("Expected a 2:1 rotor-gradient to EML ratio for 8 EMLs")
     radii = [
         "rotor_core_radius_mm",
         "rotor_magnet_inner_radius_mm",
@@ -54,6 +67,14 @@ def validate_geometry_config(config: dict[str, Any]) -> None:
     values = [float(config[name]) for name in radii]
     if values != sorted(values):
         raise ValueError("Radii must increase from rotor core to air boundary")
+    if float(config["rotor_magnet_mid_radius_mm"]) <= float(
+        config["rotor_magnet_inner_radius_mm"]
+    ):
+        raise ValueError("rotor_magnet_mid_radius_mm must exceed magnet inner radius")
+    if float(config["rotor_magnet_mid_radius_mm"]) >= float(
+        config["rotor_magnet_outer_radius_mm"]
+    ):
+        raise ValueError("rotor_magnet_mid_radius_mm must be inside magnet outer radius")
 
 
 def _polar(radius: float, angle_deg: float) -> tuple[float, float]:
@@ -133,11 +154,14 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     rotor_core_material = str(config["rotor_core_material"])
     stator_core_material = str(config["stator_core_material"])
     coil_material = str(config["coil_material"])
+    air_material = str(config["air_material"])
     output_fem_file = _lua_string(str(config["output_fem_file"]))
 
     lines = [
         "-- PM Gradient Motor Lab FEMM geometry builder",
         "-- Radial-flux 2D approximation of the described disc/axial concept.",
+        "-- Anti-cancellation v1: concentrated poles, rotor flux barriers,",
+        "-- and angularly offset EMLs to reduce backward pull.",
         "newdocument(0)",
         f'mi_probdef(0, "millimeters", "planar", 1e-8, {float(config["depth_mm"]):.6f}, 30)',
         "",
@@ -145,7 +169,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         f"stator_group = {stator_group}",
         f"coil_group = {coil_group}",
         "",
-        "mi_getmaterial(\"Air\")",
+        f"mi_getmaterial({_lua_string(air_material)})",
         f"mi_getmaterial({_lua_string(magnet_material)})",
         f"mi_getmaterial({_lua_string(rotor_core_material)})",
         f"mi_getmaterial({_lua_string(stator_core_material)})",
@@ -168,7 +192,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         f"mi_drawarc({-float(config['air_boundary_radius_mm']):.6f}, 0, {float(config['air_boundary_radius_mm']):.6f}, 0, 180, 2)",
         f"mi_addblocklabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
         f"mi_selectlabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
-        'mi_setblockprop("Air", 1, 0, "<None>", 0, 0, 0)',
+        f"mi_setblockprop({_lua_string(air_material)}, 1, 0, \"<None>\", 0, 0, 0)",
         "mi_clearselected()",
         "",
         "-- Rotor core",
@@ -189,16 +213,19 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     for index in range(rotor_count):
         angle = index * 360.0 / rotor_count
         magnetization = angle if index % 2 == 0 else angle + 180.0
-        lines.append(f"-- Rotor gradient magnet {index + 1:02d}")
+        cap_angle = angle + float(config["rotor_outer_pole_cap_offset_deg"])
+        lines.append(
+            f"-- Rotor gradient magnet {index + 1:02d}: concentrated main pole"
+        )
         lines.append(
             _arc_segment_lua(
                 center_angle=angle,
                 arc_deg=float(config["rotor_magnet_arc_deg"]),
                 inner_radius=float(config["rotor_magnet_inner_radius_mm"]),
-                outer_radius=float(config["rotor_magnet_outer_radius_mm"]),
+                outer_radius=float(config["rotor_magnet_mid_radius_mm"]),
                 label_radius=(
                     float(config["rotor_magnet_inner_radius_mm"])
-                    + float(config["rotor_magnet_outer_radius_mm"])
+                    + float(config["rotor_magnet_mid_radius_mm"])
                 )
                 / 2.0,
                 material=magnet_material,
@@ -206,10 +233,52 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 magnetization_deg=magnetization,
             )
         )
+        if float(config["rotor_outer_pole_cap_arc_deg"]) > 0:
+            lines.append(
+                f"-- Rotor gradient magnet {index + 1:02d}: forward-biased outer pole cap"
+            )
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=cap_angle,
+                    arc_deg=float(config["rotor_outer_pole_cap_arc_deg"]),
+                    inner_radius=float(config["rotor_magnet_mid_radius_mm"]),
+                    outer_radius=float(config["rotor_magnet_outer_radius_mm"]),
+                    label_radius=(
+                        float(config["rotor_magnet_mid_radius_mm"])
+                        + float(config["rotor_magnet_outer_radius_mm"])
+                    )
+                    / 2.0,
+                    material=magnet_material,
+                    group=rotor_group,
+                    magnetization_deg=magnetization,
+                )
+            )
+
+    if float(config["rotor_flux_barrier_arc_deg"]) > 0:
+        for index in range(rotor_count):
+            barrier_angle = (index + 0.5) * 360.0 / rotor_count
+            lines.append(
+                f"-- Rotor flux barrier {index + 1:02d}: air slot to interrupt return flux"
+            )
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=barrier_angle,
+                    arc_deg=float(config["rotor_flux_barrier_arc_deg"]),
+                    inner_radius=float(config["rotor_flux_barrier_inner_radius_mm"]),
+                    outer_radius=float(config["rotor_flux_barrier_outer_radius_mm"]),
+                    label_radius=(
+                        float(config["rotor_flux_barrier_inner_radius_mm"])
+                        + float(config["rotor_flux_barrier_outer_radius_mm"])
+                    )
+                    / 2.0,
+                    material=air_material,
+                    group=rotor_group,
+                )
+            )
 
     for index in range(eml_count):
-        angle = index * 360.0 / eml_count
-        lines.append(f"-- EML stator unit {index + 1:02d}")
+        angle = index * 360.0 / eml_count + float(config["eml_angular_offset_deg"])
+        lines.append(f"-- EML stator unit {index + 1:02d}: offset for positive-zone bias")
         lines.append(
             _arc_segment_lua(
                 center_angle=angle,
@@ -235,6 +304,24 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 turns=1,
             )
         )
+        if float(config["stator_flux_relief_arc_deg"]) > 0:
+            relief_angle = angle + float(config["stator_flux_relief_offset_deg"])
+            relief_inner = float(config["stator_inner_radius_mm"]) + 2.0
+            relief_outer = float(config["stator_outer_radius_mm"]) - 2.0
+            lines.append(
+                f"-- EML flux relief {index + 1:02d}: air shunt to weaken trailing pull"
+            )
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=relief_angle,
+                    arc_deg=float(config["stator_flux_relief_arc_deg"]),
+                    inner_radius=relief_inner,
+                    outer_radius=relief_outer,
+                    label_radius=(relief_inner + relief_outer) / 2.0,
+                    material=air_material,
+                    group=stator_group,
+                )
+            )
 
     lines.extend(
         [
@@ -261,12 +348,43 @@ def write_geometry_builder(root: str | Path = ROOT) -> None:
         render_pm_gradient_motor_lua(config),
         encoding="utf-8",
     )
+    pulse_config = {
+        "strategy": "selective_position_based",
+        "description": (
+            "Only pulse an EML when the rotor angle is inside a measured or "
+            "simulated positive-torque window for that EML. Do not pulse in "
+            "negative torque windows."
+        ),
+        "eml_angular_offset_deg": config["eml_angular_offset_deg"],
+        "positive_torque_windows_per_45deg_period": [
+            {"start_deg": 0.0, "end_deg": 11.4},
+            {"start_deg": 22.4, "end_deg": 34.1},
+            {"start_deg": 44.8, "end_deg": 45.0},
+        ],
+        "negative_torque_lockout_windows_per_45deg_period": [
+            {"start_deg": 11.4, "end_deg": 22.4},
+            {"start_deg": 34.1, "end_deg": 44.8},
+        ],
+        "current_density_ma_per_mm2": config["current_density_ma_per_mm2"],
+        "candidate_eml_counts": [6, 8],
+        "notes": [
+            "Windows were initialized from femm_torque_angle_arc10_offset0_period45_step1.csv.",
+            "Update windows from FEMM torque-angle CSV after each geometry run.",
+            "Pulse one EML, or a small overlapping subset, only during positive net torque.",
+            "Subtract coil input energy and add only measured/reasonable flyback recovery.",
+        ],
+    }
+    (workflow_dir / "pulse_strategy.example.json").write_text(
+        json.dumps(pulse_config, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def main() -> None:
     write_geometry_builder(ROOT)
     print("Wrote geometry/pm_gradient_motor_config.json")
     print("Wrote field_sim/femm/build_pm_gradient_motor.lua")
+    print("Wrote field_sim/femm/pulse_strategy.example.json")
 
 
 if __name__ == "__main__":

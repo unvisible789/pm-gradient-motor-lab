@@ -14,8 +14,9 @@ The actual FEMM runs show a repeatable small positive work signal in the simplif
 - 360 degree sweep, 2 degree step: 0.921199 J/rev
 - 45 degree symmetry sweep, 1 degree step, repeated 8x: 0.902928 J/rev
 - 45 degree symmetry sweep, 0.5 degree step, repeated 8x: 0.956725 J/rev
+- anti-cancellation 45 degree sweep, 1 degree step, repeated 8x: 1.396362 J/rev
 
-This is interesting because the positive value did not disappear when the angle step and symmetry check changed. However, it is not build-proof. The average torque equivalent is only about 0.14-0.15 Nm while instantaneous torque swings are about +/-18 Nm. A small integration bias, mesh-motion artifact, boundary-condition issue, or unmodeled axial/fringing effect could explain the net value.
+This is interesting because the positive value did not disappear when the angle step and symmetry check changed. The first anti-cancellation geometry improved the 45 degree full-rev equivalent by about 54.6% and reduced peak negative torque from about -17.66 Nm to -6.21 Nm. However, it is not build-proof. The improved average torque equivalent is still only about 0.22 Nm, and a small integration bias, mesh-motion artifact, boundary-condition issue, or unmodeled axial/fringing effect could still explain the net value.
 
 ## What The Current FEMM Model Includes
 
@@ -24,6 +25,7 @@ This is interesting because the positive value did not disappear when the angle 
 - full 360 degree interaction, not a single-magnet test
 - summed torque on the complete rotor group
 - permanent magnets and passive steel/copper EML geometry
+- an anti-cancellation parameter set using 10 degree concentrated rotor poles and 14 degree EML faces
 
 ## What It Does Not Yet Prove
 
