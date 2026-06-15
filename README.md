@@ -61,6 +61,12 @@ Run the current motor decision check:
 python validation/current_motor_decision.py
 ```
 
+Generate the FEMM torque-angle workflow:
+
+```bash
+python validation/femm_workflow.py
+```
+
 Run tests:
 
 ```bash
@@ -72,6 +78,9 @@ Key validation files:
 - `reports/validation_protocol.md`
 - `reports/prius_benchmark_validation_report.md`
 - `reports/current_motor_decision_report.md`
+- `field_sim/femm/README.md`
+- `field_sim/femm/sweep_torque_angle.lua`
+- `field_sim/femm/config.example.json`
 - `data/published/ornl_2010_prius_mg2_reference.csv`
 - `data/torque_angle/torque_angle_measurement_template.csv`
 - `data/field_sim/field_simulation_torque_angle_template.csv`

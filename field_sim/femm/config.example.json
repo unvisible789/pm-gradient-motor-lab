@@ -1,0 +1,13 @@
+{
+  "base_fem_file": "geometry/pm_gradient_motor_base.fem",
+  "output_csv": "data/field_sim/femm_torque_angle.csv",
+  "rotor_group": 2,
+  "rotation_center_x": 0.0,
+  "rotation_center_y": 0.0,
+  "angle_step_deg": 2,
+  "problem_frequency_hz": 0,
+  "problem_depth_mm": 25,
+  "solver_precision": 1e-08,
+  "min_angle_deg": 0,
+  "max_angle_deg": 360
+}
