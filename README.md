@@ -55,16 +55,23 @@ Run the benchmark check:
 python validation/run_prius_benchmark.py
 ```
 
+Run the current motor decision check:
+
+```bash
+python validation/current_motor_decision.py
+```
+
 Run tests:
 
 ```bash
-python -m unittest tests.test_validation_core
+python -m unittest discover -s tests
 ```
 
 Key validation files:
 
 - `reports/validation_protocol.md`
 - `reports/prius_benchmark_validation_report.md`
+- `reports/current_motor_decision_report.md`
 - `data/published/ornl_2010_prius_mg2_reference.csv`
 - `data/torque_angle/torque_angle_measurement_template.csv`
 - `data/field_sim/field_simulation_torque_angle_template.csv`
