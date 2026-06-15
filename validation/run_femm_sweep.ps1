@@ -6,7 +6,8 @@ param(
     [double]$MaxAngleDeg = 360,
     [double]$StepDeg = 2,
     [int]$RotorGroup = 2,
-    [switch]$RebuildGeometry
+    [switch]$RebuildGeometry,
+    [switch]$Reverse
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,13 +43,21 @@ if ($RebuildGeometry) {
 Invoke-Femm $femm ('open("' + $baseFem + '")') | Out-Null
 "angle_deg,torque_nm" | Set-Content -Path $outputPath -Encoding ASCII
 
-$previousAngle = $MinAngleDeg
+$startAngle = $MinAngleDeg
+if ($Reverse) {
+    $startAngle = $MaxAngleDeg
+}
+$previousAngle = $startAngle
 $start = Get-Date
 $index = 0
 $count = [int][Math]::Floor(($MaxAngleDeg - $MinAngleDeg) / $StepDeg)
 
 for ($i = 0; $i -le $count; $i++) {
-    $angle = $MinAngleDeg + $i * $StepDeg
+    if ($Reverse) {
+        $angle = $MaxAngleDeg - $i * $StepDeg
+    } else {
+        $angle = $MinAngleDeg + $i * $StepDeg
+    }
     $delta = $angle - $previousAngle
     if ([Math]::Abs($delta) -gt 1e-12) {
         Invoke-Femm $femm 'mi_seteditmode("group")' | Out-Null

@@ -22,6 +22,8 @@ def default_geometry_config() -> dict[str, Any]:
         "rotor_magnet_outer_radius_mm": 146.0,
         "rotor_gradient_count": 16,
         "rotor_magnet_arc_deg": 10.0,
+        "rotor_magnet_leading_edge_bias_deg": 0.0,
+        "rotor_halbach_bias_deg": 0.0,
         "rotor_outer_pole_cap_arc_deg": 0.0,
         "rotor_outer_pole_cap_offset_deg": 2.0,
         "rotor_flux_barrier_inner_radius_mm": 76.0,
@@ -36,6 +38,9 @@ def default_geometry_config() -> dict[str, Any]:
         "stator_flux_relief_offset_deg": -9.0,
         "air_boundary_radius_mm": 260.0,
         "depth_mm": 25.0,
+        "block_mesh_size_mm": 0.0,
+        "segment_mesh_size_mm": 0.0,
+        "arc_max_segment_deg": 1.0,
         "rotor_group": 2,
         "stator_group": 1,
         "coil_group": 3,
@@ -97,6 +102,9 @@ def _arc_segment_lua(
     group: int,
     magnetization_deg: float | None = None,
     turns: int = 0,
+    block_mesh_size: float = 0.0,
+    segment_mesh_size: float = 0.0,
+    arc_max_segment_deg: float = 1.0,
 ) -> str:
     start = center_angle - arc_deg / 2.0
     end = center_angle + arc_deg / 2.0
@@ -118,10 +126,12 @@ def _arc_segment_lua(
         (points["outer_end"][1] + points["inner_end"][1]) / 2.0,
     )
     mag_dir = 0.0 if magnetization_deg is None else magnetization_deg
+    block_auto_mesh = 1 if block_mesh_size <= 0 else 0
+    segment_auto_mesh = 1 if segment_mesh_size <= 0 else 0
     material_lua = _lua_string(material)
     return f"""
-add_arc_segment({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, {points['outer_end'][0]:.6f}, {points['outer_end'][1]:.6f}, {arc_deg:.6f}, 1)
-add_arc_segment({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f}, {arc_deg:.6f}, 1)
+add_arc_segment({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, {points['outer_end'][0]:.6f}, {points['outer_end'][1]:.6f}, {arc_deg:.6f}, {arc_max_segment_deg:.6f})
+add_arc_segment({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f}, {arc_deg:.6f}, {arc_max_segment_deg:.6f})
 add_line({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f})
 add_line({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['outer_end'][0]:.6f}, {points['outer_end'][1]:.6f})
 mi_selectarcsegment({points['outer_mid'][0]:.6f}, {points['outer_mid'][1]:.6f})
@@ -131,14 +141,14 @@ mi_selectarcsegment({points['inner_mid'][0]:.6f}, {points['inner_mid'][1]:.6f})
 mi_setarcsegmentprop(1, "<None>", 0, {group})
 mi_clearselected()
 mi_selectsegment({radial_start_mid[0]:.6f}, {radial_start_mid[1]:.6f})
-mi_setsegmentprop("<None>", 0, 1, 0, {group})
+mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {group})
 mi_clearselected()
 mi_selectsegment({radial_end_mid[0]:.6f}, {radial_end_mid[1]:.6f})
-mi_setsegmentprop("<None>", 0, 1, 0, {group})
+mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {group})
 mi_clearselected()
 mi_addblocklabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
 mi_selectlabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
-mi_setblockprop({material_lua}, 1, 0, "<None>", {mag_dir:.6f}, {group}, {turns})
+mi_setblockprop({material_lua}, {block_auto_mesh}, {block_mesh_size:.6f}, "<None>", {mag_dir:.6f}, {group}, {turns})
 mi_clearselected()
 """
 
@@ -155,6 +165,10 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     stator_core_material = str(config["stator_core_material"])
     coil_material = str(config["coil_material"])
     air_material = str(config["air_material"])
+    block_mesh_size = float(config["block_mesh_size_mm"])
+    segment_mesh_size = float(config["segment_mesh_size_mm"])
+    arc_max_segment_deg = float(config["arc_max_segment_deg"])
+    block_auto_mesh = 1 if block_mesh_size <= 0 else 0
     output_fem_file = _lua_string(str(config["output_fem_file"]))
 
     lines = [
@@ -192,7 +206,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         f"mi_drawarc({-float(config['air_boundary_radius_mm']):.6f}, 0, {float(config['air_boundary_radius_mm']):.6f}, 0, 180, 2)",
         f"mi_addblocklabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
         f"mi_selectlabel({float(config['air_boundary_radius_mm']) - 10.0:.6f}, 0)",
-        f"mi_setblockprop({_lua_string(air_material)}, 1, 0, \"<None>\", 0, 0, 0)",
+        f"mi_setblockprop({_lua_string(air_material)}, {block_auto_mesh}, {block_mesh_size:.6f}, \"<None>\", 0, 0, 0)",
         "mi_clearselected()",
         "",
         "-- Rotor core",
@@ -206,13 +220,18 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         "mi_clearselected()",
         "mi_addblocklabel(10, 0)",
         "mi_selectlabel(10, 0)",
-        f"mi_setblockprop({_lua_string(rotor_core_material)}, 1, 0, \"<None>\", 0, rotor_group, 0)",
+        f"mi_setblockprop({_lua_string(rotor_core_material)}, {block_auto_mesh}, {block_mesh_size:.6f}, \"<None>\", 0, rotor_group, 0)",
         "mi_clearselected()",
     ]
 
     for index in range(rotor_count):
-        angle = index * 360.0 / rotor_count
-        magnetization = angle if index % 2 == 0 else angle + 180.0
+        angle = (
+            index * 360.0 / rotor_count
+            + float(config["rotor_magnet_leading_edge_bias_deg"])
+        )
+        base_magnetization = angle if index % 2 == 0 else angle + 180.0
+        halbach_bias = float(config["rotor_halbach_bias_deg"])
+        magnetization = base_magnetization + (halbach_bias if index % 2 == 0 else -halbach_bias)
         cap_angle = angle + float(config["rotor_outer_pole_cap_offset_deg"])
         lines.append(
             f"-- Rotor gradient magnet {index + 1:02d}: concentrated main pole"
@@ -231,6 +250,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 material=magnet_material,
                 group=rotor_group,
                 magnetization_deg=magnetization,
+                block_mesh_size=block_mesh_size,
+                segment_mesh_size=segment_mesh_size,
+                arc_max_segment_deg=arc_max_segment_deg,
             )
         )
         if float(config["rotor_outer_pole_cap_arc_deg"]) > 0:
@@ -251,6 +273,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                     material=magnet_material,
                     group=rotor_group,
                     magnetization_deg=magnetization,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
                 )
             )
 
@@ -273,6 +298,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                     / 2.0,
                     material=air_material,
                     group=rotor_group,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
                 )
             )
 
@@ -288,6 +316,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 label_radius=float(config["stator_inner_radius_mm"]) + 4.0,
                 material=stator_core_material,
                 group=stator_group,
+                block_mesh_size=block_mesh_size,
+                segment_mesh_size=segment_mesh_size,
+                arc_max_segment_deg=arc_max_segment_deg,
             )
         )
         coil_inner = float(config["stator_inner_radius_mm"]) + 8.0
@@ -302,6 +333,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 material=coil_material,
                 group=coil_group,
                 turns=1,
+                block_mesh_size=block_mesh_size,
+                segment_mesh_size=segment_mesh_size,
+                arc_max_segment_deg=arc_max_segment_deg,
             )
         )
         if float(config["stator_flux_relief_arc_deg"]) > 0:
@@ -320,6 +354,9 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                     label_radius=(relief_inner + relief_outer) / 2.0,
                     material=air_material,
                     group=stator_group,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
                 )
             )
 

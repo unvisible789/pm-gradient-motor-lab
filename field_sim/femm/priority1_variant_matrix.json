@@ -1,0 +1,36 @@
+{
+  "objective": "Priority 1 rotor gradient shape + flux barrier exploration",
+  "protocol": [
+    "Run a 45 degree, 1 degree sweep first for each variant.",
+    "Reject variants that fail FEMM geometry/material checks.",
+    "For any positive variant, run at least medium/fine/very-fine mesh convergence before accepting.",
+    "Do not claim performance from auto-mesh-only or coarse-only results."
+  ],
+  "variants": [
+    {
+      "name": "p1_barrier_5deg_core",
+      "purpose": "Substantial rotor-core air barriers to interrupt return flux paths.",
+      "config": "field_sim/femm/variants/p1_barrier_5deg_core.json"
+    },
+    {
+      "name": "p1_barrier_8deg_core",
+      "purpose": "Wider rotor-core air barriers for a stronger cancellation falsification test.",
+      "config": "field_sim/femm/variants/p1_barrier_8deg_core.json"
+    },
+    {
+      "name": "p1_forward_biased_cap",
+      "purpose": "Leading-edge outer pole cap intended to strengthen forward pull and weaken trailing pull.",
+      "config": "field_sim/femm/variants/p1_forward_biased_cap.json"
+    },
+    {
+      "name": "p1_partial_halbach_15deg",
+      "purpose": "Partial Halbach-style magnetization bias to steer flux toward the EML side.",
+      "config": "field_sim/femm/variants/p1_partial_halbach_15deg.json"
+    },
+    {
+      "name": "p1_barrier_plus_halbach",
+      "purpose": "Combined substantial barriers and partial Halbach bias; test only after individual variants solve.",
+      "config": "field_sim/femm/variants/p1_barrier_plus_halbach.json"
+    }
+  ]
+}

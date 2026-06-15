@@ -14,10 +14,11 @@ from validation.femm_workflow import summarize_torque_angle_csv
 
 def load_curve(path: Path) -> list[tuple[float, float]]:
     with path.open(newline="", encoding="utf-8") as handle:
-        return [
+        curve = [
             (float(row["angle_deg"]), float(row["torque_nm"]))
             for row in csv.DictReader(handle)
         ]
+    return sorted(curve, key=lambda item: item[0])
 
 
 def curve_stats(path: Path) -> dict[str, float | str]:
