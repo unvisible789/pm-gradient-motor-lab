@@ -15,12 +15,25 @@ external part, demagnetization, or another measured state change.
 
 ## FEMM Setup
 
-1. Create or import the motor geometry in FEMM.
-2. Save the base model as `geometry/pm_gradient_motor_base.fem`.
-3. Assign the complete rotating assembly to group `2`.
-4. Keep the stator, coils, and boundary geometry out of group `2`.
-5. Confirm the rotation center is `(0, 0)` or edit `config.example.json`.
-6. Run `sweep_torque_angle.lua` inside FEMM.
+1. Generate the parametric Lua files:
+
+   ```bash
+   python validation/femm_geometry_builder.py
+   python validation/femm_workflow.py
+   ```
+
+2. In FEMM, run `build_pm_gradient_motor.lua`.
+   This creates a first-pass radial-flux 2D approximation of the described
+   motor and saves it as `geometry/pm_gradient_motor_base.fem`.
+3. Inspect the generated model carefully:
+   - 300 mm rotor diameter.
+   - 16 alternating rotor gradient magnets.
+   - 8 fixed EML stator units.
+   - rotor assigned to group `2`.
+   - fixed EML/stator geometry outside group `2`.
+4. Adjust geometry, materials, magnetization directions, air gaps, and coil
+   definitions as needed.
+5. Run `sweep_torque_angle.lua` inside FEMM.
 
 The generated Lua script uses FEMM's weighted stress tensor torque integral:
 
@@ -57,3 +70,15 @@ after all inputs and state changes are accounted for.
 If the net integrated work is positive, the next task is to identify what
 changed in the field/material/electrical system and whether that change can
 repeat continuously.
+
+## Current Approximation Limits
+
+The builder creates a 2D radial-flux approximation because standard FEMM
+magnetics is 2D. The physical concept can be axial/disc shaped and double
+sided, but those details need either:
+
+- a carefully equivalent 2D FEMM approximation,
+- two mirrored FEMM models for the double-sided case,
+- or a 3D solver such as Ansys Maxwell, COMSOL, JMAG, or Motor-CAD.
+
+The generated model is a starting geometry, not final proof.
