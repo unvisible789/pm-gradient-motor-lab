@@ -1,0 +1,2 @@
+motor_name,peak_power_kw_18s,peak_torque_nm,max_speed_rpm,peak_efficiency_pct,mass_kg,volume_l,dc_link_v,source
+2010 Toyota Prius MG2 ORNL benchmark,60,205,13500,96,36.7,12.5,650,ORNL/TM-2010/253 Table 4.1 and Fig. 3.11

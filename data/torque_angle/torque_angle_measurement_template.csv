@@ -1,0 +1,4 @@
+test_id,angle_deg,torque_nm,direction,rpm,notes
+bench_run_001,0,0.0,cw,0,replace with measured torque
+bench_run_001,5,0.0,cw,0,replace with measured torque
+bench_run_001,10,0.0,cw,0,replace with measured torque

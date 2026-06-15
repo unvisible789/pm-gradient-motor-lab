@@ -1,0 +1,4 @@
+simulation_id,angle_deg,torque_nm,solver,geometry_revision,notes
+field_sim_001,0,0.0,pending,pending,replace with FEA or magnetic model output
+field_sim_001,5,0.0,pending,pending,replace with FEA or magnetic model output
+field_sim_001,10,0.0,pending,pending,replace with FEA or magnetic model output

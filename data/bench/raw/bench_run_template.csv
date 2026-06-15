@@ -1,0 +1,4 @@
+time_s,voltage_v,current_a,torque_nm,rpm,temperature_c,pulse_state,notes
+0.000,0.0,0.0,0.0,0.0,25.0,off,replace with DAQ sample
+0.001,0.0,0.0,0.0,0.0,25.0,on,replace with DAQ sample
+0.002,0.0,0.0,0.0,0.0,25.0,off,replace with DAQ sample

@@ -6,8 +6,11 @@ parameter sweeps, and validation scaffolds.
 ## Contents
 
 - `simulations/`: Python models and audit scripts.
-- `data/`: Generated CSV outputs from the baseline audit and sweep.
+- `validation/`: Reusable validation math and benchmark runners.
+- `data/`: Generated CSV outputs, measurement templates, and published benchmark data.
+- `hardware/`: Test jig, sensor, and wiring notes for real bench validation.
 - `reports/`: Markdown summaries generated from the audit scripts.
+- `tests/`: Regression tests for the validation pipeline.
 
 ## Current Status
 
@@ -32,3 +35,38 @@ Known findings:
 - Rotor speed before and after pulses.
 - Load torque and bearing/friction calibration.
 - Thermal measurements for coil, driver, magnets, bearings, and load.
+
+## Validation Workflow
+
+The project now has a three-layer validation path:
+
+1. Compare against a real published PMSM benchmark.
+2. Import field-simulation torque-angle curves.
+3. Import real bench measurements and audit energy balance.
+
+The selected published benchmark is the 2010 Toyota Prius MG2 permanent-magnet
+synchronous motor from Oak Ridge National Laboratory report ORNL/TM-2010/253.
+It is similar enough to be useful because it is a real traction PMSM with
+published teardown, test-cell, efficiency, torque, speed, and thermal results.
+
+Run the benchmark check:
+
+```bash
+python validation/run_prius_benchmark.py
+```
+
+Run tests:
+
+```bash
+python -m unittest tests.test_validation_core
+```
+
+Key validation files:
+
+- `reports/validation_protocol.md`
+- `reports/prius_benchmark_validation_report.md`
+- `data/published/ornl_2010_prius_mg2_reference.csv`
+- `data/torque_angle/torque_angle_measurement_template.csv`
+- `data/field_sim/field_simulation_torque_angle_template.csv`
+- `data/bench/raw/bench_run_template.csv`
+- `SOURCES.md`
