@@ -1,0 +1,28 @@
+Item,Quantity,Specification,Est. Unit Cost (USD),Source,Notes
+Rotor disk (option 1),1,Acrylic or polycarbonate sheet 6-8mm thick ~150-200mm diameter,15-25,McMaster-Carr or local plastics supplier,Lowest cost transparent option
+Rotor disk (option 2),1,3D printed (PETG or ASA) with magnet pockets,20-40,Local printer or service,Better for complex pockets
+Rotor disk (option 3),1,Aluminum 6061 6-8mm,40-70,McMaster-Carr or online metals,Higher strength but more machining
+Shaft,1,12-16mm diameter precision ground steel or stainless ~200-300mm long,15-30,McMaster-Carr or bearing supplier,Keyed or flat for encoder
+Bearings,2,608-2RS or 6001-2RS deep groove ball bearings,3-8 each,Amazon / McMaster,Standard skateboard or precision
+Bearing blocks / pillow blocks,2,For chosen shaft diameter,8-20 each,Amazon / McMaster,Adjustable or fixed
+Adjustable stator mount,1,Aluminum plate + slotted holes or linear rail + carriage,25-60,McMaster or 3D printed + hardware,Allows air gap adjustment 0.5-5mm
+N52 magnet blocks or arcs,1 set,Matching FEMM geometry (e.g. 12-15mm arc length x thickness),40-80 total,China suppliers (eBay/AliExpress) or K&J Magnetics,Grade N52 for highest field
+EML50mm-24 or equivalent,1,24V electropermanent magnet unit ~50mm diameter,60-120,Industrial magnet suppliers (e.g. Eclipse or Chinese equivalents),Test unit for powered phase
+Non-magnetic fasteners (screws/nuts),1 set,M4/M5/M6 nylon or 316 stainless + washers,10-20,McMaster-Carr,For magnet retention and assembly
+Magnet retaining epoxy,1,Loctite 638 or similar retaining compound + activator,15-25,McMaster or local,High strength for magnets
+Angle encoder or printed degree wheel,1,600 PPR quadrature encoder or high-quality printed 360° wheel + pointer,15-60,Amazon / Digi-Key,Manual stepping first; encoder for later
+Lever arm (for torque),1,Aluminum bar 200-300mm with attachment point for load cell,10-20,Local fab or McMaster,Fixed known length for torque calculation
+Load cell (0-50kg),1,5-50kg beam or button load cell,15-40,Amazon / AliExpress,HX711 compatible
+HX711 or NAU7802 ADC board,1,24-bit ADC for load cell,5-12,Amazon,High resolution force measurement
+ESP32 or Arduino Due / STM32,1,Development board with good ADC and timers,8-25,Amazon / official,Data logging + angle + force
+USB Oscilloscope or DAQ (e.g. Analog Discovery 2 or cheap USB scope),1,2+ channels 1MS/s+,80-150,Amazon / Digilent,Coil voltage/current, gate signals, recovery voltage
+Bench DC supply 0-30V 5A+,1,Current limiting essential,60-120,Amazon / Rigol / Siglent,For safe testing
+Emergency stop button + relay/contactor,1,Big red button + 24V relay/contactor,15-30,Amazon,Hard safety cut-off
+Fuses and holders,Set,5A 10A 15A slow-blow + holders,10-15 total,Amazon,Main and branch protection
+Flyback / recovery components,Set,Fast diodes (UF4007 or better) + TVS + recovery caps matching Grok circuit notes,15-30,Digi-Key / Mouser,Per Grok circuit recommendations
+Acrylic/Polycarbonate sheet (guards),1,3-5mm thick for safety shields,10-20,Local plastics,Mechanical guarding
+Misc hardware (bolts nuts washers standoffs),1 set,M3-M6 non-magnetic where possible,15-25,McMaster or local,Assembly
+3D printing filament (if using printed rotor),1 kg,PETG or ASA,20-30,Amazon / local,For complex rotor pockets
+Epoxy or retaining compound,1,High strength magnet bonding,10-15,McMaster,For securing magnets
+Total Estimated (low end), , ,~350-450, ,Acrylic + basic components
+Total Estimated (higher end), , ,~600-800, ,Aluminum rotor + better DAQ + safety
