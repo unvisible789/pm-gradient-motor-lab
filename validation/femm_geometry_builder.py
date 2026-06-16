@@ -125,6 +125,7 @@ def _arc_segment_lua(
     material: str,
     group: int,
     magnetization_deg: float | None = None,
+    circuit: str | None = None,
     turns: int = 0,
     block_mesh_size: float = 0.0,
     segment_mesh_size: float = 0.0,
@@ -153,6 +154,7 @@ def _arc_segment_lua(
     block_auto_mesh = 1 if block_mesh_size <= 0 else 0
     segment_auto_mesh = 1 if segment_mesh_size <= 0 else 0
     material_lua = _lua_string(material)
+    circuit_lua = _lua_string(circuit) if circuit else '"<None>"'
     return f"""
 add_arc_segment({points['outer_start'][0]:.6f}, {points['outer_start'][1]:.6f}, {points['outer_end'][0]:.6f}, {points['outer_end'][1]:.6f}, {arc_deg:.6f}, {arc_max_segment_deg:.6f})
 add_arc_segment({points['inner_end'][0]:.6f}, {points['inner_end'][1]:.6f}, {points['inner_start'][0]:.6f}, {points['inner_start'][1]:.6f}, {arc_deg:.6f}, {arc_max_segment_deg:.6f})
@@ -172,7 +174,7 @@ mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {gr
 mi_clearselected()
 mi_addblocklabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
 mi_selectlabel({points['label'][0]:.6f}, {points['label'][1]:.6f})
-mi_setblockprop({material_lua}, {block_auto_mesh}, {block_mesh_size:.6f}, "<None>", {mag_dir:.6f}, {group}, {turns})
+mi_setblockprop({material_lua}, {block_auto_mesh}, {block_mesh_size:.6f}, {circuit_lua}, {mag_dir:.6f}, {group}, {turns})
 mi_clearselected()
 """
 
@@ -469,6 +471,11 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 )
             )
 
+    lines.append("-- EML coil circuits (current set per angle during selective pulse sweeps)")
+    for index in range(eml_count):
+        lines.append(f'mi_addcircprop("EML{index}", 0, 0)')
+    lines.append("")
+
     for index in range(eml_count):
         angle = index * 360.0 / eml_count + float(config["eml_angular_offset_deg"])
         lines.append(f"-- EML stator unit {index + 1:02d}: offset for positive-zone bias")
@@ -539,6 +546,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
                 label_radius=(coil_inner + coil_outer) / 2.0,
                 material=coil_material,
                 group=coil_group,
+                circuit=f"EML{index}",
                 turns=1,
                 block_mesh_size=block_mesh_size,
                 segment_mesh_size=segment_mesh_size,

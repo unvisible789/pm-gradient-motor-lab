@@ -34,8 +34,10 @@ class FemmGeometryBuilderTests(unittest.TestCase):
         self.assertEqual(lua.count("-- Rotor flux barrier"), 0)
         self.assertEqual(lua.count("-- EML stator unit"), 8)
         self.assertEqual(lua.count("-- EML flux relief"), 0)
+        self.assertEqual(lua.count('mi_addcircprop("EML'), 8)
         self.assertIn('mi_setblockprop("NdFeB 40 MGOe"', lua)
         self.assertIn('mi_setblockprop("Copper"', lua)
+        self.assertIn('"EML0"', lua)
         self.assertIn('mi_setblockprop("Air"', lua)
         self.assertIn("rotor_group = 2", lua)
 

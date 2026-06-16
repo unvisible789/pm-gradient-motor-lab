@@ -2,9 +2,14 @@ import unittest
 
 from validation.pulse_control import (
     PulseElectricalModel,
+    active_eml_index,
+    angle_in_windows,
     build_phase_schedule,
+    current_from_density_ma_per_mm2,
+    eml_coil_area_mm2,
     estimate_revolution_energy,
     merge_windows,
+    pulse_current_levels_for_geometry,
 )
 
 
@@ -68,6 +73,36 @@ class PulseControlTests(unittest.TestCase):
         self.assertAlmostEqual(result["unrecovered_j_per_pulse"], 0.0025)
         self.assertAlmostEqual(result["input_j_per_rev"], 0.16)
         self.assertAlmostEqual(result["net_after_input_j_per_rev"], 1.326)
+
+    def test_angle_in_windows_and_active_eml_index(self):
+        windows = [
+            {"start_deg": 0.0, "end_deg": 2.0},
+            {"start_deg": 14.0, "end_deg": 25.0},
+        ]
+        self.assertTrue(angle_in_windows(1.0, windows))
+        self.assertFalse(angle_in_windows(10.0, windows))
+        self.assertEqual(active_eml_index(1.0, eml_count=8, eml_offset_deg=12.0), 0)
+
+    def test_pulse_current_levels_for_gap159_geometry(self):
+        levels = pulse_current_levels_for_geometry(
+            {
+                "stator_inner_radius_mm": 159.0,
+                "stator_outer_radius_mm": 205.0,
+                "eml_arc_deg": 14.0,
+            }
+        )
+        self.assertGreater(levels["high"], levels["medium"])
+        self.assertGreater(levels["medium"], levels["low"])
+        area = eml_coil_area_mm2(
+            stator_inner_radius_mm=159.0,
+            stator_outer_radius_mm=205.0,
+            eml_arc_deg=14.0,
+        )
+        self.assertAlmostEqual(
+            current_from_density_ma_per_mm2(10.0, area),
+            levels["medium"],
+            places=6,
+        )
 
 
 if __name__ == "__main__":

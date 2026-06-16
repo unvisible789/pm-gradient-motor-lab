@@ -1,0 +1,50 @@
+[
+  {
+    "label": "low",
+    "pulse_current_a": 3.6688566206172806,
+    "current_density_ma_per_mm2": 5.0,
+    "stored_j_per_pulse": 0.03365127225661813,
+    "unrecovered_j_per_pulse": 0.008412818064154533,
+    "effective_pulses_per_rev": 34.13333333333333,
+    "unrecovered_input_j_per_rev": 0.2871575232564747,
+    "copper_loss_j_per_rev": 0.05743150465129495,
+    "switching_loss_j_per_rev": 0.006826666666666667,
+    "total_electrical_input_j_per_rev": 0.3514156945744363,
+    "mechanical_work_j_per_rev": 1.447866985757063,
+    "added_mechanical_work_j_per_rev": -0.0376410534187861,
+    "net_added_work_after_input_j_per_rev": -0.3890567479932224,
+    "closes_energy": false
+  },
+  {
+    "label": "medium",
+    "pulse_current_a": 7.337713241234561,
+    "current_density_ma_per_mm2": 10.0,
+    "stored_j_per_pulse": 0.13460508902647253,
+    "unrecovered_j_per_pulse": 0.03365127225661813,
+    "effective_pulses_per_rev": 34.13333333333333,
+    "unrecovered_input_j_per_rev": 1.1486300930258988,
+    "copper_loss_j_per_rev": 0.2297260186051798,
+    "switching_loss_j_per_rev": 0.006826666666666667,
+    "total_electrical_input_j_per_rev": 1.3851827782977453,
+    "mechanical_work_j_per_rev": 1.4462339041964298,
+    "added_mechanical_work_j_per_rev": -0.03927413497941923,
+    "net_added_work_after_input_j_per_rev": -1.4244569132771645,
+    "closes_energy": false
+  },
+  {
+    "label": "high",
+    "pulse_current_a": 14.675426482469122,
+    "current_density_ma_per_mm2": 20.0,
+    "stored_j_per_pulse": 0.5384203561058901,
+    "unrecovered_j_per_pulse": 0.13460508902647253,
+    "effective_pulses_per_rev": 34.13333333333333,
+    "unrecovered_input_j_per_rev": 4.594520372103595,
+    "copper_loss_j_per_rev": 0.9189040744207192,
+    "switching_loss_j_per_rev": 0.006826666666666667,
+    "total_electrical_input_j_per_rev": 5.520251113190981,
+    "mechanical_work_j_per_rev": 1.5324251596210043,
+    "added_mechanical_work_j_per_rev": 0.04691712044515528,
+    "net_added_work_after_input_j_per_rev": -5.473333992745825,
+    "closes_energy": false
+  }
+]

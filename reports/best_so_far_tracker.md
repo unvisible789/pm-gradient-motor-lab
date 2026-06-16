@@ -29,9 +29,23 @@ Optimum at **stator_inner_radius_mm = 159.0**. Inward (−0.5 mm) and outward (+
 
 Best candidate windows: `field_sim/femm/pulse_strategy.gap159_eml12.json`
 
+## Selective Pulse Assist (2026-06-15)
+
+Coil-off baseline: **1.486 J/rev** (matches passive gap 159 screen).
+
+| Pulse level | Current (A) | Full-rev equiv | Δ vs coil-off | Net after placeholder input |
+|---|---:|---:|---:|---:|
+| low (5 mA/mm²) | 3.67 | 1.448 J/rev | −0.038 | −0.389 J/rev |
+| medium (10 mA/mm²) | 7.34 | 1.446 J/rev | −0.039 | −1.424 J/rev |
+| high (20 mA/mm²) | 14.68 | 1.532 J/rev | +0.047 | −5.473 J/rev |
+
+**Conclusion:** Selective pulsing does **not** close energy on first screen. Low/medium reduce net work; high adds +0.047 J/rev mechanically but far below estimated electrical input. Assist-window work decreased at all levels. No mesh refinement.
+
+Reports: `reports/pulse_assist_comparison.md`, `reports/pulse_electrical_accounting.md`
+
 ## Next Actions
 
-1. Selective assist / energized EML pulse planning on gap 159 candidate
+1. Do not pursue higher pulse current without measured L/R and recovery data
 2. Do not mesh-refine until >3 J/rev or cancellation <0.85 with torque dominance
 3. Fix shunt variant JSON radii if stator shunt branch is reopened
 
