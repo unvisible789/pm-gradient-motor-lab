@@ -24,6 +24,7 @@ def main() -> None:
     parser.add_argument("--block-mesh-size-mm", type=float, default=None)
     parser.add_argument("--segment-mesh-size-mm", type=float, default=None)
     parser.add_argument("--arc-max-segment-deg", type=float, default=None)
+    parser.add_argument("--eml-angular-offset-deg", type=float, default=None)
     args = parser.parse_args()
 
     if args.config_json:
@@ -39,6 +40,8 @@ def main() -> None:
         config["segment_mesh_size_mm"] = args.segment_mesh_size_mm
     if args.arc_max_segment_deg is not None:
         config["arc_max_segment_deg"] = args.arc_max_segment_deg
+    if args.eml_angular_offset_deg is not None:
+        config["eml_angular_offset_deg"] = args.eml_angular_offset_deg
 
     geometry_dir = ROOT / "geometry"
     femm_dir = ROOT / "field_sim" / "femm"

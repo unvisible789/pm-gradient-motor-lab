@@ -2,30 +2,33 @@
 
 Date: 2026-06-15
 
-## Current Accepted Baseline
+## Current Best First-Screen
 
-Mesh-refined current geometry is near-zero to slightly negative net work. Treat all auto-mesh positive values as untrusted until mesh convergence is shown.
+| Rank | Variant | Full-rev equivalent | Notes |
+|---:|---------|--------------------:|-------|
+| 1 | ASYM_B EML offset +12° | 1.159 J/rev | best overall; still below 3 J/rev gate |
+| 2 | ASYM_B EML offset −6° | 1.112 J/rev | nearby hold candidate |
+| 3 | ASYM_B EML offset −12° | 1.067 J/rev | nearby hold candidate |
+| 4 | ASYM_B offset 0° | 0.952 J/rev | asymmetric shape peak |
+| 5 | TEB_A | 0.766 J/rev | TEB branch closed |
 
-## ASYM Family First-Screen (complete)
+## Branch Status
 
-| Variant | Full-rev equivalent | Peak + | Peak − | Decision |
-|---|---:|---:|---:|---|
-| ASYM_B | 0.952 J/rev | 5.044 Nm | -3.994 Nm | best in family; weak positive, do not promote |
-| ASYM_D | 0.465 J/rev | 4.249 Nm | -3.459 Nm | weak positive, do not promote |
-| ASYM_C | -0.127 J/rev | 4.455 Nm | -3.627 Nm | reject |
-| ASYM_A | -0.260 J/rev | 5.490 Nm | -5.093 Nm | reject |
-| TEB_B | 0.343 J/rev | 6.277 Nm | -6.175 Nm | weak positive, do not promote |
+- **ASYM shape search:** peaked at ASYM_B
+- **TEB branch:** closed (A/B/C/D screened)
+- **EML phasing:** modest gain; best at +12°
 
-## What We Learned
+## Selective Assist (ASYM_B offset 0°)
 
-ASYM_B is the peak of the first asymmetric-magnet shape search. More or less asymmetry does not improve net work. TEB_B remains weaker than ASYM_B.
+- Assist: 2–13°, 25–35°
+- Lockout: 0–2°, 13–25°, 35–45°
+- `f_neg` ≈ 0.533 over 45°
+- See `reports/asym_b_selective_assist_analysis.md`
 
-None of the screened variants meet the 3 J/rev mesh-refinement gate.
+## Next Actions
 
-## Next Variants To Run
+1. Fine EML offset search around +12° (+9, +15, +18)
+2. Re-extract pulse windows for best EML-offset candidate after sweep
+3. Do not mesh-refine until first-screen result exceeds 3 J/rev gate
 
-1. EML angular offset sweep on ASYM_B (e.g. -12, -6, 0, +6, +12 deg)
-2. `teb_a_2deg_134_145`, `teb_c_4deg_130_145`, `teb_d_3deg_126_145` for branch closure
-3. Selective pulsing analysis using `field_sim/femm/pulse_strategy.asym_b.json`
-
-Promote only if a first-screen result is clearly stronger than ASYM_B, preferably above 3 J/rev equivalent or showing much lower cancellation with stronger positive/negative imbalance.
+Promote only if clearly above 3 J/rev equivalent or showing much lower cancellation with stronger positive/negative imbalance.
