@@ -47,5 +47,7 @@
   "coil_material": "Copper",
   "air_material": "Air",
   "current_density_ma_per_mm2": 0.0,
+  "variant_name": "asym_b_lead2p0_trail140",
+  "variant_purpose": "Asymmetric magnet middle starting point; current best first-screen direction.",
   "verification_label": "ASYM_B"
 }

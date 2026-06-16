@@ -6,27 +6,26 @@ Date: 2026-06-15
 
 Mesh-refined current geometry is near-zero to slightly negative net work. Treat all auto-mesh positive values as untrusted until mesh convergence is shown.
 
-## First-Screen Results
+## ASYM Family First-Screen (complete)
 
-| Variant | Full-rev equivalent | Peak + | Peak - | Decision |
+| Variant | Full-rev equivalent | Peak + | Peak − | Decision |
 |---|---:|---:|---:|---|
-| ASYM_B | 0.952 J/rev | 5.044 Nm | -3.994 Nm | weak positive, do not promote yet |
-| TEB_B | 0.343 J/rev | 6.277 Nm | -6.175 Nm | weak positive, do not promote yet |
+| ASYM_B | 0.952 J/rev | 5.044 Nm | -3.994 Nm | best in family; weak positive, do not promote |
+| ASYM_D | 0.465 J/rev | 4.249 Nm | -3.459 Nm | weak positive, do not promote |
+| ASYM_C | -0.127 J/rev | 4.455 Nm | -3.627 Nm | reject |
+| ASYM_A | -0.260 J/rev | 5.490 Nm | -5.093 Nm | reject |
+| TEB_B | 0.343 J/rev | 6.277 Nm | -6.175 Nm | weak positive, do not promote |
 
 ## What We Learned
 
-ASYM_B is more promising than TEB_B because it improves peak-positive to peak-negative balance. TEB_B still has near-perfect cancellation.
+ASYM_B is the peak of the first asymmetric-magnet shape search. More or less asymmetry does not improve net work. TEB_B remains weaker than ASYM_B.
 
-Neither result is close to the 3 J/rev mesh-refinement gate, so the next efficient move is not mesh refinement. The next move is targeted shape search around ASYM_B.
+None of the screened variants meet the 3 J/rev mesh-refinement gate.
 
 ## Next Variants To Run
 
-Run these before any mesh refinement:
+1. EML angular offset sweep on ASYM_B (e.g. -12, -6, 0, +6, +12 deg)
+2. `teb_a_2deg_134_145`, `teb_c_4deg_130_145`, `teb_d_3deg_126_145` for branch closure
+3. Selective pulsing analysis using `field_sim/femm/pulse_strategy.asym_b.json`
 
-1. `asym_c_lead2p5_trail138`
-2. `asym_d_lead3p0_trail137`
-3. `asym_a_lead1p5_trail142`
-4. `teb_c_4deg_130_145`
-5. `teb_d_3deg_126_145`
-
-Promote only if the first-screen result is clearly stronger than ASYM_B, preferably above 3 J/rev equivalent or showing much lower cancellation with stronger positive/negative imbalance.
+Promote only if a first-screen result is clearly stronger than ASYM_B, preferably above 3 J/rev equivalent or showing much lower cancellation with stronger positive/negative imbalance.
