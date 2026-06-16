@@ -17,6 +17,8 @@ class FemmGeometryBuilderTests(unittest.TestCase):
         self.assertEqual(config["design_variant"], "anti_cancellation_v1")
         self.assertIn("rotor_halbach_bias_deg", config)
         self.assertIn("rotor_magnet_leading_edge_bias_deg", config)
+        self.assertIn("trailing_edge_barrier_enabled", config)
+        self.assertIn("asymmetric_pole_enabled", config)
         self.assertEqual(config["rotor_group"], 2)
         self.assertEqual(config["stator_group"], 1)
 
@@ -55,6 +57,22 @@ class FemmGeometryBuilderTests(unittest.TestCase):
 
         self.assertIn('mi_setblockprop("NdFeB 40 MGOe", 1, 0.000000, "<None>", 15.000000, 2, 0)', lua)
         self.assertIn('mi_setblockprop("NdFeB 40 MGOe", 1, 0.000000, "<None>", 187.500000, 2, 0)', lua)
+
+    def test_trailing_edge_barrier_renders_air_slots(self):
+        config = default_geometry_config()
+        config["trailing_edge_barrier_enabled"] = True
+        lua = render_pm_gradient_motor_lua(config)
+
+        self.assertEqual(lua.count("-- TEB_B trailing-edge air-gap barrier"), 16)
+        self.assertIn('mi_setblockprop("Air"', lua)
+
+    def test_asymmetric_pole_replaces_symmetric_magnet_shape(self):
+        config = default_geometry_config()
+        config["asymmetric_pole_enabled"] = True
+        lua = render_pm_gradient_motor_lua(config)
+
+        self.assertEqual(lua.count("-- ASYM_B asymmetric pole"), 16)
+        self.assertIn("sloped outer edge", lua)
 
 
 if __name__ == "__main__":

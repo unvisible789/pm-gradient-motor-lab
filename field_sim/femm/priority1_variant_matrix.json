@@ -8,6 +8,46 @@
   ],
   "variants": [
     {
+      "name": "teb_a_2deg_134_145",
+      "purpose": "Trailing-edge air-gap barrier, mild width/depth.",
+      "config": "field_sim/femm/variants/teb_a_2deg_134_145.json"
+    },
+    {
+      "name": "teb_b_3deg_132_145",
+      "purpose": "Trailing-edge air-gap barrier, middle starting point.",
+      "config": "field_sim/femm/variants/teb_b_3deg_132_145.json"
+    },
+    {
+      "name": "teb_c_4deg_130_145",
+      "purpose": "Trailing-edge air-gap barrier, wider near-air-gap slot.",
+      "config": "field_sim/femm/variants/teb_c_4deg_130_145.json"
+    },
+    {
+      "name": "teb_d_3deg_126_145",
+      "purpose": "Trailing-edge air-gap barrier, deeper middle-width slot.",
+      "config": "field_sim/femm/variants/teb_d_3deg_126_145.json"
+    },
+    {
+      "name": "asym_a_lead1p5_trail142",
+      "purpose": "Asymmetric magnet with mild leading extension and mild trailing retreat.",
+      "config": "field_sim/femm/variants/asym_a_lead1p5_trail142.json"
+    },
+    {
+      "name": "asym_b_lead2p0_trail140",
+      "purpose": "Asymmetric magnet middle starting point; current best first-screen direction.",
+      "config": "field_sim/femm/variants/asym_b_lead2p0_trail140.json"
+    },
+    {
+      "name": "asym_c_lead2p5_trail138",
+      "purpose": "Stronger asymmetric magnet with more leading bias and trailing retreat.",
+      "config": "field_sim/femm/variants/asym_c_lead2p5_trail138.json"
+    },
+    {
+      "name": "asym_d_lead3p0_trail137",
+      "purpose": "Aggressive asymmetric magnet; use as the edge of the first shape search.",
+      "config": "field_sim/femm/variants/asym_d_lead3p0_trail137.json"
+    },
+    {
       "name": "p1_barrier_5deg_core",
       "purpose": "Substantial rotor-core air barriers to interrupt return flux paths.",
       "config": "field_sim/femm/variants/p1_barrier_5deg_core.json"

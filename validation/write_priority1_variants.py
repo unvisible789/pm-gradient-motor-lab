@@ -26,6 +26,90 @@ def variant(name: str, purpose: str, changes: dict[str, Any]) -> dict[str, Any]:
 def main() -> None:
     variants = [
         variant(
+            "teb_a_2deg_134_145",
+            "Trailing-edge air-gap barrier, mild width/depth.",
+            {
+                "trailing_edge_barrier_enabled": True,
+                "trailing_edge_barrier_arc_deg": 2.0,
+                "trailing_edge_barrier_inner_radius_mm": 134.0,
+                "trailing_edge_barrier_outer_radius_mm": 145.0,
+            },
+        ),
+        variant(
+            "teb_b_3deg_132_145",
+            "Trailing-edge air-gap barrier, middle starting point.",
+            {
+                "trailing_edge_barrier_enabled": True,
+                "trailing_edge_barrier_arc_deg": 3.0,
+                "trailing_edge_barrier_inner_radius_mm": 132.0,
+                "trailing_edge_barrier_outer_radius_mm": 145.0,
+            },
+        ),
+        variant(
+            "teb_c_4deg_130_145",
+            "Trailing-edge air-gap barrier, wider near-air-gap slot.",
+            {
+                "trailing_edge_barrier_enabled": True,
+                "trailing_edge_barrier_arc_deg": 4.0,
+                "trailing_edge_barrier_inner_radius_mm": 130.0,
+                "trailing_edge_barrier_outer_radius_mm": 145.0,
+            },
+        ),
+        variant(
+            "teb_d_3deg_126_145",
+            "Trailing-edge air-gap barrier, deeper middle-width slot.",
+            {
+                "trailing_edge_barrier_enabled": True,
+                "trailing_edge_barrier_arc_deg": 3.0,
+                "trailing_edge_barrier_inner_radius_mm": 126.0,
+                "trailing_edge_barrier_outer_radius_mm": 145.0,
+            },
+        ),
+        variant(
+            "asym_a_lead1p5_trail142",
+            "Asymmetric magnet with mild leading extension and mild trailing retreat.",
+            {
+                "asymmetric_pole_enabled": True,
+                "asymmetric_leading_extension_deg": 1.5,
+                "asymmetric_trailing_pullback_deg": 1.5,
+                "asymmetric_leading_outer_radius_mm": 145.0,
+                "asymmetric_trailing_outer_radius_mm": 142.0,
+            },
+        ),
+        variant(
+            "asym_b_lead2p0_trail140",
+            "Asymmetric magnet middle starting point; current best first-screen direction.",
+            {
+                "asymmetric_pole_enabled": True,
+                "asymmetric_leading_extension_deg": 2.0,
+                "asymmetric_trailing_pullback_deg": 2.0,
+                "asymmetric_leading_outer_radius_mm": 145.0,
+                "asymmetric_trailing_outer_radius_mm": 140.0,
+            },
+        ),
+        variant(
+            "asym_c_lead2p5_trail138",
+            "Stronger asymmetric magnet with more leading bias and trailing retreat.",
+            {
+                "asymmetric_pole_enabled": True,
+                "asymmetric_leading_extension_deg": 2.5,
+                "asymmetric_trailing_pullback_deg": 2.5,
+                "asymmetric_leading_outer_radius_mm": 145.0,
+                "asymmetric_trailing_outer_radius_mm": 138.0,
+            },
+        ),
+        variant(
+            "asym_d_lead3p0_trail137",
+            "Aggressive asymmetric magnet; use as the edge of the first shape search.",
+            {
+                "asymmetric_pole_enabled": True,
+                "asymmetric_leading_extension_deg": 3.0,
+                "asymmetric_trailing_pullback_deg": 3.0,
+                "asymmetric_leading_outer_radius_mm": 145.0,
+                "asymmetric_trailing_outer_radius_mm": 137.0,
+            },
+        ),
+        variant(
             "p1_barrier_5deg_core",
             "Substantial rotor-core air barriers to interrupt return flux paths.",
             {

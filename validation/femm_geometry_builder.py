@@ -24,6 +24,18 @@ def default_geometry_config() -> dict[str, Any]:
         "rotor_magnet_arc_deg": 10.0,
         "rotor_magnet_leading_edge_bias_deg": 0.0,
         "rotor_halbach_bias_deg": 0.0,
+        # TEB_B mode: a near-air-gap air slot behind each magnet trailing edge.
+        "trailing_edge_barrier_enabled": False,
+        "trailing_edge_barrier_arc_deg": 3.0,
+        "trailing_edge_barrier_inner_radius_mm": 132.0,
+        "trailing_edge_barrier_outer_radius_mm": 145.0,
+        "trailing_edge_barrier_gap_deg": 0.0,
+        # ASYM_B mode: one asymmetric magnet polygon, no separate pole cap.
+        "asymmetric_pole_enabled": False,
+        "asymmetric_leading_extension_deg": 2.0,
+        "asymmetric_trailing_pullback_deg": 2.0,
+        "asymmetric_leading_outer_radius_mm": 145.0,
+        "asymmetric_trailing_outer_radius_mm": 140.0,
         "rotor_outer_pole_cap_arc_deg": 0.0,
         "rotor_outer_pole_cap_offset_deg": 2.0,
         "rotor_flux_barrier_inner_radius_mm": 76.0,
@@ -153,6 +165,109 @@ mi_clearselected()
 """
 
 
+def _render_trailing_edge_barrier(
+    *,
+    center_angle: float,
+    magnet_arc_deg: float,
+    barrier_arc_deg: float,
+    barrier_inner_radius: float,
+    barrier_outer_radius: float,
+    barrier_gap_deg: float,
+    air_material: str,
+    group: int,
+    block_mesh_size: float = 0.0,
+    segment_mesh_size: float = 0.0,
+    arc_max_segment_deg: float = 1.0,
+) -> str:
+    """Render TEB_B: a closed air slot behind the magnet trailing edge."""
+    trailing_edge = center_angle + magnet_arc_deg / 2.0
+    barrier_center = trailing_edge + barrier_gap_deg + barrier_arc_deg / 2.0
+    return _arc_segment_lua(
+        center_angle=barrier_center,
+        arc_deg=barrier_arc_deg,
+        inner_radius=barrier_inner_radius,
+        outer_radius=barrier_outer_radius,
+        label_radius=(barrier_inner_radius + barrier_outer_radius) / 2.0,
+        material=air_material,
+        group=group,
+        block_mesh_size=block_mesh_size,
+        segment_mesh_size=segment_mesh_size,
+        arc_max_segment_deg=arc_max_segment_deg,
+    )
+
+
+def _render_asymmetric_pole(
+    *,
+    center_angle: float,
+    base_arc_deg: float,
+    leading_extension_deg: float,
+    trailing_pullback_deg: float,
+    inner_radius: float,
+    leading_outer_radius: float,
+    trailing_outer_radius: float,
+    material: str,
+    group: int,
+    magnetization_deg: float,
+    block_mesh_size: float = 0.0,
+    segment_mesh_size: float = 0.0,
+    arc_max_segment_deg: float = 1.0,
+) -> str:
+    """Render ASYM_B: inner arc plus leading/trailing edges and sloped outer edge."""
+    start_angle = center_angle - base_arc_deg / 2.0 - leading_extension_deg
+    end_angle = center_angle + base_arc_deg / 2.0 - trailing_pullback_deg
+    span_deg = end_angle - start_angle
+    if span_deg <= 0:
+        raise ValueError("Asymmetric pole angular span must be positive")
+
+    inner_leading = _polar(inner_radius, start_angle)
+    inner_trailing = _polar(inner_radius, end_angle)
+    outer_leading = _polar(leading_outer_radius, start_angle)
+    outer_trailing = _polar(trailing_outer_radius, end_angle)
+    inner_mid = _polar(inner_radius, (start_angle + end_angle) / 2.0)
+    leading_mid = (
+        (inner_leading[0] + outer_leading[0]) / 2.0,
+        (inner_leading[1] + outer_leading[1]) / 2.0,
+    )
+    trailing_mid = (
+        (inner_trailing[0] + outer_trailing[0]) / 2.0,
+        (inner_trailing[1] + outer_trailing[1]) / 2.0,
+    )
+    outer_mid = (
+        (outer_leading[0] + outer_trailing[0]) / 2.0,
+        (outer_leading[1] + outer_trailing[1]) / 2.0,
+    )
+    label = (
+        (inner_leading[0] + inner_trailing[0] + outer_leading[0] + outer_trailing[0]) / 4.0,
+        (inner_leading[1] + inner_trailing[1] + outer_leading[1] + outer_trailing[1]) / 4.0,
+    )
+    block_auto_mesh = 1 if block_mesh_size <= 0 else 0
+    segment_auto_mesh = 1 if segment_mesh_size <= 0 else 0
+    material_lua = _lua_string(material)
+    return f"""
+-- ASYM_B asymmetric pole: extended leading side, sloped outer edge, and recessed trailing side.
+add_arc_segment({inner_trailing[0]:.6f}, {inner_trailing[1]:.6f}, {inner_leading[0]:.6f}, {inner_leading[1]:.6f}, {span_deg:.6f}, {arc_max_segment_deg:.6f})
+add_line({inner_leading[0]:.6f}, {inner_leading[1]:.6f}, {outer_leading[0]:.6f}, {outer_leading[1]:.6f})
+add_line({outer_leading[0]:.6f}, {outer_leading[1]:.6f}, {outer_trailing[0]:.6f}, {outer_trailing[1]:.6f})
+add_line({outer_trailing[0]:.6f}, {outer_trailing[1]:.6f}, {inner_trailing[0]:.6f}, {inner_trailing[1]:.6f})
+mi_selectarcsegment({inner_mid[0]:.6f}, {inner_mid[1]:.6f})
+mi_setarcsegmentprop(1, "<None>", 0, {group})
+mi_clearselected()
+mi_selectsegment({leading_mid[0]:.6f}, {leading_mid[1]:.6f})
+mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {group})
+mi_clearselected()
+mi_selectsegment({outer_mid[0]:.6f}, {outer_mid[1]:.6f})
+mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {group})
+mi_clearselected()
+mi_selectsegment({trailing_mid[0]:.6f}, {trailing_mid[1]:.6f})
+mi_setsegmentprop("<None>", {segment_mesh_size:.6f}, {segment_auto_mesh}, 0, {group})
+mi_clearselected()
+mi_addblocklabel({label[0]:.6f}, {label[1]:.6f})
+mi_selectlabel({label[0]:.6f}, {label[1]:.6f})
+mi_setblockprop({material_lua}, {block_auto_mesh}, {block_mesh_size:.6f}, "<None>", {magnetization_deg:.6f}, {group}, 0)
+mi_clearselected()
+"""
+
+
 def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     validate_geometry_config(config)
     rotor_count = int(config["rotor_gradient_count"])
@@ -236,25 +351,63 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         lines.append(
             f"-- Rotor gradient magnet {index + 1:02d}: concentrated main pole"
         )
-        lines.append(
-            _arc_segment_lua(
-                center_angle=angle,
-                arc_deg=float(config["rotor_magnet_arc_deg"]),
-                inner_radius=float(config["rotor_magnet_inner_radius_mm"]),
-                outer_radius=float(config["rotor_magnet_mid_radius_mm"]),
-                label_radius=(
-                    float(config["rotor_magnet_inner_radius_mm"])
-                    + float(config["rotor_magnet_mid_radius_mm"])
+        if bool(config["asymmetric_pole_enabled"]):
+            lines.append(
+                _render_asymmetric_pole(
+                    center_angle=angle,
+                    base_arc_deg=float(config["rotor_magnet_arc_deg"]),
+                    leading_extension_deg=float(config["asymmetric_leading_extension_deg"]),
+                    trailing_pullback_deg=float(config["asymmetric_trailing_pullback_deg"]),
+                    inner_radius=float(config["rotor_magnet_inner_radius_mm"]),
+                    leading_outer_radius=float(config["asymmetric_leading_outer_radius_mm"]),
+                    trailing_outer_radius=float(config["asymmetric_trailing_outer_radius_mm"]),
+                    material=magnet_material,
+                    group=rotor_group,
+                    magnetization_deg=magnetization,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
                 )
-                / 2.0,
-                material=magnet_material,
-                group=rotor_group,
-                magnetization_deg=magnetization,
-                block_mesh_size=block_mesh_size,
-                segment_mesh_size=segment_mesh_size,
-                arc_max_segment_deg=arc_max_segment_deg,
             )
-        )
+        else:
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=angle,
+                    arc_deg=float(config["rotor_magnet_arc_deg"]),
+                    inner_radius=float(config["rotor_magnet_inner_radius_mm"]),
+                    outer_radius=float(config["rotor_magnet_mid_radius_mm"]),
+                    label_radius=(
+                        float(config["rotor_magnet_inner_radius_mm"])
+                        + float(config["rotor_magnet_mid_radius_mm"])
+                    )
+                    / 2.0,
+                    material=magnet_material,
+                    group=rotor_group,
+                    magnetization_deg=magnetization,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
+                )
+            )
+        if bool(config["trailing_edge_barrier_enabled"]):
+            lines.append(
+                f"-- TEB_B trailing-edge air-gap barrier {index + 1:02d}"
+            )
+            lines.append(
+                _render_trailing_edge_barrier(
+                    center_angle=angle,
+                    magnet_arc_deg=float(config["rotor_magnet_arc_deg"]),
+                    barrier_arc_deg=float(config["trailing_edge_barrier_arc_deg"]),
+                    barrier_inner_radius=float(config["trailing_edge_barrier_inner_radius_mm"]),
+                    barrier_outer_radius=float(config["trailing_edge_barrier_outer_radius_mm"]),
+                    barrier_gap_deg=float(config["trailing_edge_barrier_gap_deg"]),
+                    air_material=air_material,
+                    group=rotor_group,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
+                )
+            )
         if float(config["rotor_outer_pole_cap_arc_deg"]) > 0:
             lines.append(
                 f"-- Rotor gradient magnet {index + 1:02d}: forward-biased outer pole cap"

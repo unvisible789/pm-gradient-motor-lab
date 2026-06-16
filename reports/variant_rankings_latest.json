@@ -1,0 +1,50 @@
+[
+  {
+    "csv": "C:/Users/Owner/Documents/Codex/pm-gradient-motor-lab/data/field_sim/femm_torque_angle_arc10_offset0_period45_step1.csv",
+    "full_rev_equiv_j": 1.3963618836154552,
+    "work_45deg_j": 0.1745452354519319,
+    "average_torque_nm": 0.22223789612250955,
+    "peak_positive_nm": 6.597095225784451,
+    "peak_negative_nm": -6.206311418483044,
+    "positive_work_j": 1.4957520191885953,
+    "negative_work_j": -1.3212067837366637,
+    "cancellation_ratio": 0.9380377038987309,
+    "decision": "HOLD_FOR_NEARBY_VARIANTS"
+  },
+  {
+    "csv": "C:/Users/Owner/Documents/Codex/pm-gradient-motor-lab/data/field_sim/femm_asym_b_period45_step1.csv",
+    "full_rev_equiv_j": 0.9516978480113294,
+    "work_45deg_j": 0.11896223100141617,
+    "average_torque_nm": 0.15146741684092238,
+    "peak_positive_nm": 5.044163222425373,
+    "peak_negative_nm": -3.994061657560415,
+    "positive_work_j": 1.1627591760611902,
+    "negative_work_j": -1.043796945059774,
+    "cancellation_ratio": 0.9460869225746311,
+    "decision": "WEAK_POSITIVE_DO_NOT_PROMOTE"
+  },
+  {
+    "csv": "C:/Users/Owner/Documents/Codex/pm-gradient-motor-lab/data/field_sim/femm_torque_angle_period45_step1.csv",
+    "full_rev_equiv_j": 0.9029276188417434,
+    "work_45deg_j": 0.11286595235521793,
+    "average_torque_nm": 0.14370539379285824,
+    "peak_positive_nm": 17.98540903867301,
+    "peak_negative_nm": -17.65812144798387,
+    "positive_work_j": 4.450537188525076,
+    "negative_work_j": -4.337671236169858,
+    "cancellation_ratio": 0.9871571147495701,
+    "decision": "WEAK_POSITIVE_DO_NOT_PROMOTE"
+  },
+  {
+    "csv": "C:/Users/Owner/Documents/Codex/pm-gradient-motor-lab/data/field_sim/femm_teb_b_period45_step1.csv",
+    "full_rev_equiv_j": 0.3431654170713223,
+    "work_45deg_j": 0.04289567713391529,
+    "average_torque_nm": 0.054616472425092835,
+    "peak_positive_nm": 6.27737654326524,
+    "peak_negative_nm": -6.17502916555807,
+    "positive_work_j": 1.4409149307086107,
+    "negative_work_j": -1.398019253574695,
+    "cancellation_ratio": 0.9848902178249177,
+    "decision": "WEAK_POSITIVE_DO_NOT_PROMOTE"
+  }
+]
