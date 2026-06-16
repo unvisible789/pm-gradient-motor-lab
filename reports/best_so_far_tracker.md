@@ -6,34 +6,33 @@ Date: 2026-06-15
 
 | Rank | Variant | Full-rev equivalent | Cancellation | Notes |
 |---:|---------|--------------------:|-------------:|-------|
-| 1 | ASYM_B + EML +12° + stator inner +1mm gap | 1.486 J/rev | 0.909 | new best; partial P2 screen |
-| 2 | ASYM_B EML offset +12° | 1.159 J/rev | 0.934 | fine offset sweep peak |
-| 3 | ASYM_B + EML +12° + EML arc −20% | 1.070 J/rev | 0.855 | lower cancellation |
-| 4 | ASYM_B EML offset −6° | 1.112 J/rev | 0.937 | offset sweep |
-| 5 | ASYM_B offset 0° | 0.952 J/rev | 0.946 | shape peak |
+| 1 | ASYM_B + EML +12° + gap 159.0 mm | **1.486 J/rev** | 0.909 | sharp gap optimum |
+| 2 | gap 159 + Halbach 15° | 1.413 J/rev | 0.909 | combo worse than gap alone |
+| 3 | ASYM_B + EML +12° (gap 158) | 1.159 J/rev | 0.934 | offset-only baseline |
+| 4 | gap 159.5 mm | 0.834 J/rev | 0.948 | past optimum |
 
 First screen only; not mesh-converged. None meet 3 J/rev promotion gate.
 
-## Fine EML Offset Sweep (complete)
+## Gap Sweep Conclusion
 
-Peak at +12°. Past +12° net work falls: +15° 0.889, +18° 0.973, +21° 0.837, +9° 0.718 J/rev.
+Optimum at **stator_inner_radius_mm = 159.0**. Inward (−0.5 mm) and outward (+0.5 mm and beyond) both reduce net work.
 
 ## Branch Status
 
-- **ASYM shape search:** peaked at ASYM_B
-- **TEB branch:** closed
-- **EML offset sweep:** complete; peak +12°
-- **P2/P3 optimization:** partial — gap+1mm promising; EML asymmetric pole and stator shunt FEMM failures need geometry fix
+- ASYM shape: peaked at ASYM_B
+- EML offset: peaked at +12°
+- Stator gap: peaked at 159.0 mm
+- Gap combinations: none beat gap 159 alone
+- TEB branch: closed
 
-## Failed / Incomplete Runs
+## Pulse Strategy
 
-- `opt_eml_asym_mild`, `opt_eml_asym_moderate`: FEMM geometry failure (incomplete sweep)
-- `opt_stator_shunt_center`, `opt_stator_shunt_leading`: FEMM geometry failure (incomplete sweep)
-- `opt_stator_relief_2deg`: solved but net negative (−1.675 J/rev equivalent)
+Best candidate windows: `field_sim/femm/pulse_strategy.gap159_eml12.json`
 
 ## Next Actions
 
-1. Re-run/fix EML asymmetric pole and stator shunt geometry
-2. Explore gap+1mm around +12° offset base (best partial result)
-3. Re-extract pulse windows for best candidate
-4. Do not mesh-refine until first-screen exceeds 3 J/rev gate
+1. Selective assist / energized EML pulse planning on gap 159 candidate
+2. Do not mesh-refine until >3 J/rev or cancellation <0.85 with torque dominance
+3. Fix shunt variant JSON radii if stator shunt branch is reopened
+
+Build recommendation: **unchanged — no full motor build**.

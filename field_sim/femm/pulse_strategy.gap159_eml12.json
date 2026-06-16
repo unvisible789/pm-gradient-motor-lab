@@ -1,0 +1,33 @@
+{
+  "strategy": "selective_position_based",
+  "source_csv": "data/field_sim/femm_opt_gap_159p0_period45_step1.csv",
+  "source_label": "ASYM_B+EML+12+gap159",
+  "positive_torque_windows_per_45deg_period": [
+    {
+      "start_deg": 0.0,
+      "end_deg": 2.0
+    },
+    {
+      "start_deg": 14.0,
+      "end_deg": 25.0
+    },
+    {
+      "start_deg": 37.0,
+      "end_deg": 45.0
+    }
+  ],
+  "negative_torque_lockout_windows_per_45deg_period": [
+    {
+      "start_deg": 2.0,
+      "end_deg": 14.0
+    },
+    {
+      "start_deg": 25.0,
+      "end_deg": 37.0
+    }
+  ],
+  "notes": [
+    "Windows derived from sampled torque sign over the sweep span.",
+    "First screen only; not mesh-converged."
+  ]
+}

@@ -66,7 +66,13 @@ def main() -> None:
     args = parser.parse_args()
 
     paths = sorted((ROOT / "data" / "field_sim").glob(args.glob))
-    rows = [row_for(path) for path in paths]
+    rows = []
+    for path in paths:
+        try:
+            rows.append(row_for(path))
+        except ValueError:
+            # Skip header-only or otherwise empty torque curves from failed sweeps.
+            continue
     rows.sort(
         key=lambda item: (
             item["screen_status"] == "complete_period",

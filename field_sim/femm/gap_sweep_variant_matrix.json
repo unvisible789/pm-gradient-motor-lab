@@ -1,0 +1,30 @@
+{
+  "base": "ASYM_B + EML +12",
+  "variants": [
+    {
+      "name": "gap_158p5",
+      "stator_inner_radius_mm": 158.5,
+      "output_csv": "data/field_sim/femm_opt_gap_158p5_period45_step1.csv"
+    },
+    {
+      "name": "gap_159p0",
+      "stator_inner_radius_mm": 159.0,
+      "output_csv": "data/field_sim/femm_opt_gap_159p0_period45_step1.csv"
+    },
+    {
+      "name": "gap_159p5",
+      "stator_inner_radius_mm": 159.5,
+      "output_csv": "data/field_sim/femm_opt_gap_159p5_period45_step1.csv"
+    },
+    {
+      "name": "gap_160p0",
+      "stator_inner_radius_mm": 160.0,
+      "output_csv": "data/field_sim/femm_opt_gap_160p0_period45_step1.csv"
+    },
+    {
+      "name": "gap_161p0",
+      "stator_inner_radius_mm": 161.0,
+      "output_csv": "data/field_sim/femm_opt_gap_161p0_period45_step1.csv"
+    }
+  ]
+}
