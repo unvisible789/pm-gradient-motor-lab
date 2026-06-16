@@ -1,0 +1,136 @@
+{
+  "label": "ASYM_B_plus12_stator_gap_plus1mm",
+  "source_csv": "data/field_sim/femm_opt_opt_stator_inner_gap_plus1mm_period45_step1.csv",
+  "strategy": "selective_phased_assist",
+  "advance_deg": 1.0,
+  "positive_torque_windows_per_45deg_period": [
+    {
+      "start_deg": 0.0,
+      "end_deg": 2.0
+    },
+    {
+      "start_deg": 14.0,
+      "end_deg": 25.0
+    },
+    {
+      "start_deg": 37.0,
+      "end_deg": 45.0
+    }
+  ],
+  "pulse_schedule_360deg": [
+    {
+      "start_deg": 359.0,
+      "end_deg": 360.0
+    },
+    {
+      "start_deg": 0.0,
+      "end_deg": 1.0
+    },
+    {
+      "start_deg": 13.0,
+      "end_deg": 24.0
+    },
+    {
+      "start_deg": 36.0,
+      "end_deg": 44.0
+    },
+    {
+      "start_deg": 44.0,
+      "end_deg": 46.0
+    },
+    {
+      "start_deg": 58.0,
+      "end_deg": 69.0
+    },
+    {
+      "start_deg": 81.0,
+      "end_deg": 89.0
+    },
+    {
+      "start_deg": 89.0,
+      "end_deg": 91.0
+    },
+    {
+      "start_deg": 103.0,
+      "end_deg": 114.0
+    },
+    {
+      "start_deg": 126.0,
+      "end_deg": 134.0
+    },
+    {
+      "start_deg": 134.0,
+      "end_deg": 136.0
+    },
+    {
+      "start_deg": 148.0,
+      "end_deg": 159.0
+    },
+    {
+      "start_deg": 171.0,
+      "end_deg": 179.0
+    },
+    {
+      "start_deg": 179.0,
+      "end_deg": 181.0
+    },
+    {
+      "start_deg": 193.0,
+      "end_deg": 204.0
+    },
+    {
+      "start_deg": 216.0,
+      "end_deg": 224.0
+    },
+    {
+      "start_deg": 224.0,
+      "end_deg": 226.0
+    },
+    {
+      "start_deg": 238.0,
+      "end_deg": 249.0
+    },
+    {
+      "start_deg": 261.0,
+      "end_deg": 269.0
+    },
+    {
+      "start_deg": 269.0,
+      "end_deg": 271.0
+    },
+    {
+      "start_deg": 283.0,
+      "end_deg": 294.0
+    },
+    {
+      "start_deg": 306.0,
+      "end_deg": 314.0
+    },
+    {
+      "start_deg": 314.0,
+      "end_deg": 316.0
+    },
+    {
+      "start_deg": 328.0,
+      "end_deg": 339.0
+    },
+    {
+      "start_deg": 351.0,
+      "end_deg": 359.0
+    }
+  ],
+  "electrical_budget": {
+    "stored_j_per_pulse": 0.01,
+    "unrecovered_j_per_pulse": 0.0025,
+    "pulse_count_per_rev": 64.0,
+    "input_j_per_rev": 0.16,
+    "mechanical_work_j_per_rev": 1.485508039175849,
+    "net_after_input_j_per_rev": 1.3255080391758491
+  },
+  "control_rules": [
+    "Pulse only inside assist windows.",
+    "Do not pulse in lockout windows unless energized FEMM shows a local sign reversal.",
+    "Account for coil input, copper loss, switching loss, and imperfect flyback recovery.",
+    "Regenerate this schedule after each geometry or EML offset change."
+  ]
+}
