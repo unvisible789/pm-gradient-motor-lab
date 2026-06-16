@@ -46,8 +46,20 @@ def default_geometry_config() -> dict[str, Any]:
         "eml_unit_count": 8,
         "eml_arc_deg": 14.0,
         "eml_angular_offset_deg": 0.0,
+        # Priority 2: make stator/EML interaction asymmetric instead of only
+        # moving the whole EML around the rotor.
+        "eml_asymmetric_pole_enabled": False,
+        "eml_leading_extension_deg": 0.0,
+        "eml_trailing_pullback_deg": 0.0,
+        "eml_leading_outer_radius_mm": 205.0,
+        "eml_trailing_outer_radius_mm": 205.0,
         "stator_flux_relief_arc_deg": 0.0,
         "stator_flux_relief_offset_deg": -9.0,
+        "stator_shunt_enabled": False,
+        "stator_shunt_arc_deg": 8.0,
+        "stator_shunt_offset_deg": 0.0,
+        "stator_shunt_inner_radius_mm": 205.0,
+        "stator_shunt_outer_radius_mm": 225.0,
         "air_boundary_radius_mm": 260.0,
         "depth_mm": 25.0,
         "block_mesh_size_mm": 0.0,
@@ -290,7 +302,7 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
         "-- PM Gradient Motor Lab FEMM geometry builder",
         "-- Radial-flux 2D approximation of the described disc/axial concept.",
         "-- Anti-cancellation v1: concentrated poles, rotor flux barriers,",
-        "-- and angularly offset EMLs to reduce backward pull.",
+        "-- angularly offset EMLs, and optional stator flux-shaping features.",
         "newdocument(0)",
         f'mi_probdef(0, "millimeters", "planar", 1e-8, {float(config["depth_mm"]):.6f}, 30)',
         "",
@@ -460,20 +472,62 @@ def render_pm_gradient_motor_lua(config: dict[str, Any]) -> str:
     for index in range(eml_count):
         angle = index * 360.0 / eml_count + float(config["eml_angular_offset_deg"])
         lines.append(f"-- EML stator unit {index + 1:02d}: offset for positive-zone bias")
-        lines.append(
-            _arc_segment_lua(
-                center_angle=angle,
-                arc_deg=float(config["eml_arc_deg"]),
-                inner_radius=float(config["stator_inner_radius_mm"]),
-                outer_radius=float(config["stator_outer_radius_mm"]),
-                label_radius=float(config["stator_inner_radius_mm"]) + 4.0,
-                material=stator_core_material,
-                group=stator_group,
-                block_mesh_size=block_mesh_size,
-                segment_mesh_size=segment_mesh_size,
-                arc_max_segment_deg=arc_max_segment_deg,
+        if bool(config["eml_asymmetric_pole_enabled"]):
+            lines.append(
+                _render_asymmetric_pole(
+                    center_angle=angle,
+                    base_arc_deg=float(config["eml_arc_deg"]),
+                    leading_extension_deg=float(config["eml_leading_extension_deg"]),
+                    trailing_pullback_deg=float(config["eml_trailing_pullback_deg"]),
+                    inner_radius=float(config["stator_inner_radius_mm"]),
+                    leading_outer_radius=float(config["eml_leading_outer_radius_mm"]),
+                    trailing_outer_radius=float(config["eml_trailing_outer_radius_mm"]),
+                    material=stator_core_material,
+                    group=stator_group,
+                    magnetization_deg=0.0,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
+                )
             )
-        )
+        else:
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=angle,
+                    arc_deg=float(config["eml_arc_deg"]),
+                    inner_radius=float(config["stator_inner_radius_mm"]),
+                    outer_radius=float(config["stator_outer_radius_mm"]),
+                    label_radius=float(config["stator_inner_radius_mm"]) + 4.0,
+                    material=stator_core_material,
+                    group=stator_group,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
+                )
+            )
+        if bool(config["stator_shunt_enabled"]):
+            shunt_angle = angle + float(config["stator_shunt_offset_deg"])
+            lines.append(
+                f"-- EML back-iron shunt {index + 1:02d}: stator-side flux return path"
+            )
+            lines.append(
+                _arc_segment_lua(
+                    center_angle=shunt_angle,
+                    arc_deg=float(config["stator_shunt_arc_deg"]),
+                    inner_radius=float(config["stator_shunt_inner_radius_mm"]),
+                    outer_radius=float(config["stator_shunt_outer_radius_mm"]),
+                    label_radius=(
+                        float(config["stator_shunt_inner_radius_mm"])
+                        + float(config["stator_shunt_outer_radius_mm"])
+                    )
+                    / 2.0,
+                    material=stator_core_material,
+                    group=stator_group,
+                    block_mesh_size=block_mesh_size,
+                    segment_mesh_size=segment_mesh_size,
+                    arc_max_segment_deg=arc_max_segment_deg,
+                )
+            )
         coil_inner = float(config["stator_inner_radius_mm"]) + 8.0
         coil_outer = float(config["stator_outer_radius_mm"]) - 8.0
         lines.append(

@@ -1,0 +1,69 @@
+{
+  "base": "ASYM_B + EML offset +12 deg",
+  "protocol": [
+    "45 deg period, 1 deg step first screen.",
+    "Do not mesh-refine below 3 J/rev gate."
+  ],
+  "variants": [
+    {
+      "name": "opt_eml_arc_minus10pct",
+      "priority": 2,
+      "purpose": "EML arc -10%"
+    },
+    {
+      "name": "opt_eml_arc_minus20pct",
+      "priority": 2,
+      "purpose": "EML arc -20%"
+    },
+    {
+      "name": "opt_eml_arc_minus30pct",
+      "priority": 2,
+      "purpose": "EML arc -30%"
+    },
+    {
+      "name": "opt_eml_asym_mild",
+      "priority": 2,
+      "purpose": "EML asymmetric pole mild"
+    },
+    {
+      "name": "opt_eml_asym_moderate",
+      "priority": 2,
+      "purpose": "EML asymmetric pole moderate"
+    },
+    {
+      "name": "opt_stator_inner_gap_minus1mm",
+      "priority": 2,
+      "purpose": "stator inner 157.0 mm"
+    },
+    {
+      "name": "opt_stator_inner_gap_plus1mm",
+      "priority": 2,
+      "purpose": "stator inner 159.0 mm"
+    },
+    {
+      "name": "opt_stator_shunt_leading",
+      "priority": 3,
+      "purpose": "stator shunt leading"
+    },
+    {
+      "name": "opt_stator_shunt_center",
+      "priority": 3,
+      "purpose": "stator shunt center"
+    },
+    {
+      "name": "opt_stator_relief_2deg",
+      "priority": 3,
+      "purpose": "stator relief 2.0 deg"
+    },
+    {
+      "name": "opt_stator_relief_3deg",
+      "priority": 3,
+      "purpose": "stator relief 3.0 deg"
+    },
+    {
+      "name": "opt_stator_relief_4deg",
+      "priority": 3,
+      "purpose": "stator relief 4.0 deg"
+    }
+  ]
+}

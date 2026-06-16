@@ -19,6 +19,8 @@ class FemmGeometryBuilderTests(unittest.TestCase):
         self.assertIn("rotor_magnet_leading_edge_bias_deg", config)
         self.assertIn("trailing_edge_barrier_enabled", config)
         self.assertIn("asymmetric_pole_enabled", config)
+        self.assertIn("eml_asymmetric_pole_enabled", config)
+        self.assertIn("stator_shunt_enabled", config)
         self.assertEqual(config["rotor_group"], 2)
         self.assertEqual(config["stator_group"], 1)
 
@@ -73,6 +75,25 @@ class FemmGeometryBuilderTests(unittest.TestCase):
 
         self.assertEqual(lua.count("-- ASYM_B asymmetric pole"), 16)
         self.assertIn("sloped outer edge", lua)
+
+    def test_eml_asymmetric_pole_renders_stator_shapes(self):
+        config = default_geometry_config()
+        config["eml_asymmetric_pole_enabled"] = True
+        config["eml_leading_extension_deg"] = 1.5
+        config["eml_trailing_pullback_deg"] = 1.5
+        config["eml_trailing_outer_radius_mm"] = 198.0
+        lua = render_pm_gradient_motor_lua(config)
+
+        self.assertEqual(lua.count("-- ASYM_B asymmetric pole"), 8)
+        self.assertIn('mi_setblockprop("1010 Steel"', lua)
+
+    def test_stator_shunt_renders_back_iron_segments(self):
+        config = default_geometry_config()
+        config["stator_shunt_enabled"] = True
+        lua = render_pm_gradient_motor_lua(config)
+
+        self.assertEqual(lua.count("-- EML back-iron shunt"), 8)
+        self.assertIn('mi_setblockprop("1010 Steel"', lua)
 
 
 if __name__ == "__main__":

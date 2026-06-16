@@ -36,7 +36,7 @@
   "eml_trailing_pullback_deg": 0.0,
   "eml_leading_outer_radius_mm": 205.0,
   "eml_trailing_outer_radius_mm": 205.0,
-  "stator_flux_relief_arc_deg": 2.0,
+  "stator_flux_relief_arc_deg": 3.0,
   "stator_flux_relief_offset_deg": -9.0,
   "stator_shunt_enabled": false,
   "stator_shunt_arc_deg": 8.0,
@@ -57,7 +57,6 @@
   "coil_material": "Copper",
   "air_material": "Air",
   "current_density_ma_per_mm2": 0.0,
-  "variant_name": "opt_stator_relief_2deg",
-  "variant_purpose": "Trailing-side stator air relief slot (2.0 deg).",
-  "verification_label": "opt_stator_relief_2deg"
+  "variant_name": "opt_stator_relief_3deg",
+  "variant_purpose": "Trailing-side stator air relief slot (3.0 deg)."
 }

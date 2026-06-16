@@ -58,6 +58,5 @@
   "air_material": "Air",
   "current_density_ma_per_mm2": 0.0,
   "variant_name": "opt_stator_relief_2deg",
-  "variant_purpose": "Trailing-side stator air relief slot (2.0 deg).",
-  "verification_label": "opt_stator_relief_2deg"
+  "variant_purpose": "Trailing-side stator air relief slot (2.0 deg)."
 }

@@ -1,0 +1,62 @@
+{
+  "objective": "Priority 2 EML/stator flux-shaping after ASYM_B +12 offset became best first-screen.",
+  "baseline": "ASYM_B rotor geometry with eml_angular_offset_deg = +12.",
+  "protocol": [
+    "Run 45 degree period sweeps at 1 degree first.",
+    "Do not mesh-refine unless a candidate beats +12 offset by a large margin.",
+    "Promote only above 3 J/rev equivalent or with much lower cancellation than 0.934.",
+    "Avoid combining changes until at least one individual mechanism improves cancellation."
+  ],
+  "variants": [
+    {
+      "name": "p2_eml_narrow_10",
+      "purpose": "ASYM_B +12 with a 10 percent narrower EML pole face.",
+      "config": "field_sim/femm/variants/p2_eml_narrow_10.json"
+    },
+    {
+      "name": "p2_eml_narrow_20",
+      "purpose": "ASYM_B +12 with a 20 percent narrower EML pole face.",
+      "config": "field_sim/femm/variants/p2_eml_narrow_20.json"
+    },
+    {
+      "name": "p2_eml_narrow_30",
+      "purpose": "ASYM_B +12 with a 30 percent narrower EML pole face.",
+      "config": "field_sim/femm/variants/p2_eml_narrow_30.json"
+    },
+    {
+      "name": "p2_eml_bias_mild",
+      "purpose": "Forward-biased stator pole shoe to favor assist-window attraction.",
+      "config": "field_sim/femm/variants/p2_eml_bias_mild.json"
+    },
+    {
+      "name": "p2_eml_bias_moderate",
+      "purpose": "Stronger stator pole-shoe bias; use only if mild bias is promising.",
+      "config": "field_sim/femm/variants/p2_eml_bias_moderate.json"
+    },
+    {
+      "name": "p2_stator_relief_mild",
+      "purpose": "Trailing-side stator air relief to weaken lockout-region pull.",
+      "config": "field_sim/femm/variants/p2_stator_relief_mild.json"
+    },
+    {
+      "name": "p2_stator_relief_moderate",
+      "purpose": "Wider trailing-side stator air relief; screen after mild relief.",
+      "config": "field_sim/femm/variants/p2_stator_relief_moderate.json"
+    },
+    {
+      "name": "p2_stator_shunt_centered",
+      "purpose": "Back-iron shunt behind each EML to alter stator return flux.",
+      "config": "field_sim/femm/variants/p2_stator_shunt_centered.json"
+    },
+    {
+      "name": "p2_stator_shunt_leading",
+      "purpose": "Leading-biased back-iron shunt to favor assist-side flux closure.",
+      "config": "field_sim/femm/variants/p2_stator_shunt_leading.json"
+    },
+    {
+      "name": "p2_best_combo_mild",
+      "purpose": "Limited combination: narrower EML, mild pole bias, and mild stator relief.",
+      "config": "field_sim/femm/variants/p2_best_combo_mild.json"
+    }
+  ]
+}

@@ -27,10 +27,12 @@ def main() -> None:
     parser.add_argument("--eml-angular-offset-deg", type=float, default=None)
     args = parser.parse_args()
 
+    base = default_geometry_config()
     if args.config_json:
-        config = json.loads((ROOT / args.config_json).read_text(encoding="utf-8"))
+        loaded = json.loads((ROOT / args.config_json).read_text(encoding="utf-8"))
+        config = {**base, **loaded}
     else:
-        config = default_geometry_config()
+        config = base.copy()
     config["verification_label"] = args.label
     if args.air_boundary_radius_mm is not None:
         config["air_boundary_radius_mm"] = args.air_boundary_radius_mm
