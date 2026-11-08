@@ -15,8 +15,7 @@ from validation.pulse_control import (  # noqa: E402
     estimate_revolution_energy,
     merge_windows,
 )
-from validation.rank_femm_variants import full_rev_equivalent  # noqa: E402
-from validation.analyze_femm_sweeps import curve_stats  # noqa: E402
+from validation.passive_cycle_audit import audit_curve  # noqa: E402
 
 
 def build_strategy_payload(
@@ -47,6 +46,8 @@ def build_strategy_payload(
         "label": label,
         "source_csv": source_csv,
         "strategy": "selective_phased_assist",
+        "status": "legacy_illustrative_scaffold_not_validated",
+        "performance_claim_eligible": False,
         "advance_deg": advance_deg,
         "positive_torque_windows_per_45deg_period": merged,
         "pulse_schedule_360deg": schedule,
@@ -64,7 +65,7 @@ def markdown_report(payload: dict) -> str:
     budget = payload["electrical_budget"]
     return f"""# Pulse Strategy: {payload['label']}
 
-First-screen control scaffold only. This is not a performance claim.
+Legacy positive-window assist scaffold only, not the trailing-release model or a performance claim. The illustrative pulse count is an assumption, not a measured channel/event schedule.
 
 ## Source
 
@@ -76,16 +77,19 @@ First-screen control scaffold only. This is not a performance claim.
 
 {_window_lines(payload['positive_torque_windows_per_45deg_period'])}
 
-## Electrical Budget Placeholder
+## Stored-energy illustration
 
 | Metric | Value |
 |---|---:|
-| Mechanical work | {budget['mechanical_work_j_per_rev']:.6f} J/rev |
+| Unvalidated torque-integral diagnostic | {budget['mechanical_work_j_per_rev']:.6f} J/rev |
 | Stored energy per pulse | {budget['stored_j_per_pulse']:.6f} J |
 | Unrecovered energy per pulse | {budget['unrecovered_j_per_pulse']:.6f} J |
 | Pulse count per rev | {budget['pulse_count_per_rev']:.3f} |
-| Unrecovered pulse input | {budget['input_j_per_rev']:.6f} J/rev |
-| Mechanical minus unrecovered input | {budget['net_after_input_j_per_rev']:.6f} J/rev |
+| Illustrative unrecovered magnetic storage | {budget['illustrative_unrecovered_magnetic_energy_j_per_rev']:.6f} J/rev |
+| Total electrical input | Unknown; signed voltage/current waveforms required |
+| Net generation / efficiency | Not evaluated |
+
+One half L I squared is stored magnetic energy, not total electrical input. Motion-induced voltage, copper heating, switching and auxiliary power are missing. Defaults are mathematical placeholders, not a qualified current for an APW module. A passive torque integral is a residual requiring validation, not available shaft energy.
 
 ## Control Rules
 
@@ -114,12 +118,14 @@ def main() -> None:
 
     curve = load_curve(args.csv)
     windows = extract_windows(curve)["positive_torque_windows"]
-    stats = curve_stats(args.csv)
+    audit = audit_curve(curve, expected_span_deg=45.0)
+    if not audit["complete_declared_span"]:
+        parser.error("A complete 45-degree source curve is required; partial curves cannot be extrapolated")
     payload = build_strategy_payload(
         label=args.label,
-        source_csv=str(args.csv.as_posix()),
+        source_csv=(args.csv.relative_to(ROOT) if args.csv.is_relative_to(ROOT) else args.csv).as_posix(),
         assist_windows=windows,
-        mechanical_work_j_per_rev=full_rev_equivalent(stats),
+        mechanical_work_j_per_rev=audit["conditional_full_rev_residual_j"],
         advance_deg=args.advance_deg,
     )
     args.json_out.parent.mkdir(parents=True, exist_ok=True)

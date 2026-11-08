@@ -1,3 +1,5 @@
+> Historical exploratory report. The positive passive-work interpretation and surplus-energy acceptance tests are superseded by [the passive-cycle audit](passive_cycle_audit.md) and [current acceptance criteria](variant_promotion_gates.md). Original values below are preserved; they are not validated output ratings.
+
 # Best-So-Far Tracker
 
 Date: 2026-06-15

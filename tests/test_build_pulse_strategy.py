@@ -1,6 +1,6 @@
 import unittest
 
-from validation.build_pulse_strategy import build_strategy_payload
+from validation.build_pulse_strategy import build_strategy_payload, markdown_report
 
 
 class BuildPulseStrategyTests(unittest.TestCase):
@@ -21,7 +21,11 @@ class BuildPulseStrategyTests(unittest.TestCase):
         self.assertEqual(payload["label"], "best_gap_candidate")
         self.assertEqual(len(payload["pulse_schedule_360deg"]), 16)
         self.assertEqual(payload["pulse_schedule_360deg"][0], {"start_deg": 1.0, "end_deg": 12.0})
-        self.assertEqual(payload["electrical_budget"]["input_j_per_rev"], 0.16)
+        self.assertAlmostEqual(payload["electrical_budget"]["illustrative_unrecovered_magnetic_energy_j_per_rev"], 0.16)
+        self.assertIsNone(payload["electrical_budget"]["input_j_per_rev"])
+        self.assertIsNone(payload["electrical_budget"]["net_after_input_j_per_rev"])
+        self.assertFalse(payload["performance_claim_eligible"])
+        self.assertIn("Not evaluated", markdown_report(payload))
         self.assertEqual(payload["control_rules"][0], "Pulse only inside assist windows.")
 
 

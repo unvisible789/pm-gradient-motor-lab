@@ -3,9 +3,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from validation.pulse_control import PulseElectricalModel, estimate_revolution_energy  # noqa: E402
 
 
 def load_windows(path: Path) -> list[dict[str, float]]:
@@ -23,7 +27,7 @@ def window_duty(windows: list[dict[str, float]], period_deg: float) -> float:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Estimate EML pulse input energy budget.")
+    parser = argparse.ArgumentParser(description="Illustrate assumed inductive storage; this cannot estimate motor input or generation.")
     parser.add_argument("--windows", type=Path, default=ROOT / "field_sim/femm/pulse_strategy.asym_b.json")
     parser.add_argument("--period-deg", type=float, default=45.0)
     parser.add_argument("--eml-count", type=int, default=8)
@@ -35,47 +39,61 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=ROOT / "reports/pulse_energy_budget.md")
     args = parser.parse_args()
 
+    if not math.isfinite(args.period_deg) or not 0 < args.period_deg <= 360:
+        parser.error("period-deg must be finite and in (0, 360]")
+    if not math.isclose(360.0 / args.period_deg, round(360.0 / args.period_deg)):
+        parser.error("The assumed sector must divide one revolution")
     windows = load_windows(args.windows)
     duty = window_duty(windows, args.period_deg)
     periods_per_rev = 360.0 / args.period_deg
-    inductance_h = args.coil_inductance_mh / 1000.0
-    stored_j = 0.5 * inductance_h * args.pulse_current_a**2
-    unrecovered_j = stored_j * (1.0 - args.recovery_efficiency)
-    pulses_per_rev = args.eml_count * args.pulses_per_eml_per_period * periods_per_rev
-    input_j_per_rev = unrecovered_j * pulses_per_rev
-    net_after_input = args.mechanical_work_j_per_rev - input_j_per_rev
+    budget = estimate_revolution_energy(
+        mechanical_work_j_per_rev=args.mechanical_work_j_per_rev,
+        electrical_model=PulseElectricalModel(
+            coil_inductance_mh=args.coil_inductance_mh,
+            pulse_current_a=args.pulse_current_a,
+            recovery_efficiency=args.recovery_efficiency,
+            eml_count=args.eml_count,
+            pulses_per_eml_per_rev=args.pulses_per_eml_per_period * periods_per_rev,
+        ),
+    )
+    stored_j = budget["stored_j_per_pulse"]
+    unrecovered_j = budget["unrecovered_j_per_pulse"]
+    pulses_per_rev = budget["pulse_count_per_rev"]
+    window_label = (args.windows.relative_to(ROOT) if args.windows.is_relative_to(ROOT) else args.windows).as_posix()
 
     report = f"""# Pulse Energy Budget
 
-First-order accounting only. Replace defaults with measured coil L/R/current and driver recovery data before making design claims.
+**Illustration only; insufficient data for electrical input, efficiency or net generation.** Defaults are assumed numbers, not a qualified APW drive waveform. One half L I squared measures stored magnetic energy, not complete pulse input.
 
 ## Assumptions
 
 | Parameter | Value |
 |---|---:|
-| Pulse window file | `{args.windows.as_posix()}` |
-| Assist duty over {args.period_deg:.1f} deg | {duty:.3f} |
+| Pulse window file | `{window_label}` |
+| Legacy assist-window coverage over {args.period_deg:.1f} deg | {duty:.3f} |
 | EML count | {args.eml_count} |
 | Coil inductance | {args.coil_inductance_mh:.3f} mH |
 | Pulse current | {args.pulse_current_a:.3f} A |
 | Flyback/recovery efficiency | {args.recovery_efficiency:.3f} |
-| Pulses per EML per 45 deg period | {args.pulses_per_eml_per_period:.3f} |
-| Mechanical first-screen work | {args.mechanical_work_j_per_rev:.6f} J/rev |
+| Assumed pulses per EML per {args.period_deg:g} deg sector | {args.pulses_per_eml_per_period:.3f} |
+| Unvalidated torque-integral diagnostic | {args.mechanical_work_j_per_rev:.6f} J/rev |
 
-## Estimated Energy
+## Illustrative magnetic storage
 
 | Metric | Value |
 |---|---:|
 | Stored magnetic energy per pulse, 0.5 L I^2 | {stored_j:.6f} J |
-| Unrecovered input per pulse | {unrecovered_j:.6f} J |
+| Assumed unrecovered storage per pulse | {unrecovered_j:.6f} J |
 | Pulses per revolution | {pulses_per_rev:.3f} |
-| Unrecovered pulse input | {input_j_per_rev:.6f} J/rev |
-| Mechanical work minus unrecovered pulse input | {net_after_input:.6f} J/rev |
+| Assumed unrecovered storage over all events | {budget['illustrative_unrecovered_magnetic_energy_j_per_rev']:.6f} J/rev |
+| Total electrical input | Unknown |
+| Net generation / efficiency | Not evaluated |
 
 ## Interpretation
 
-This does not model energized torque yet. It only prevents pulse assist from being treated as free.
-If FEMM later shows added mechanical work from coil current, compare only the added work against measured or simulated electrical input plus switching, copper, core, and recovery losses.
+Neither a sampled angular fraction nor a magnet/coil count ratio determines a pulse count. The event count above is an explicit illustrative assumption and needs a complete per-channel switching schedule before use.
+
+Measure signed source voltage times current, all auxiliary and drive inputs, useful output, and stored-energy changes over a complete repeat. Include motion-induced voltage and winding heating. If returned energy is already in the signed source integral, do not subtract recovery again. A positive passive torque residual must not be treated as available shaft energy.
 """
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(report, encoding="utf-8")

@@ -1,3 +1,5 @@
+> Superseded on 2026-11-08: this historical description is not a build instruction. Use [release driver requirements](../release_driver_requirements.md). The original is retained below for traceability.
+
 # EML Driver Circuit with Energy Recovery
 
 ## Recommended Topology

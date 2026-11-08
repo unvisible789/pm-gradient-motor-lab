@@ -3,6 +3,8 @@ import unittest
 from validation.pulse_control import (
     PulseElectricalModel,
     active_eml_index,
+    ampere_turns_from_density_ma_per_mm2,
+    count_selected_pulses,
     angle_in_windows,
     build_phase_schedule,
     current_from_density_ma_per_mm2,
@@ -55,7 +57,7 @@ class PulseControlTests(unittest.TestCase):
         self.assertIn({"start_deg": 359.0, "end_deg": 360.0}, schedule)
         self.assertIn({"start_deg": 0.0, "end_deg": 1.0}, schedule)
 
-    def test_estimate_revolution_energy_accounts_for_unrecovered_pulse_input(self):
+    def test_magnetic_storage_does_not_establish_source_input(self):
         model = PulseElectricalModel(
             coil_inductance_mh=5.0,
             pulse_current_a=2.0,
@@ -71,8 +73,10 @@ class PulseControlTests(unittest.TestCase):
 
         self.assertAlmostEqual(result["stored_j_per_pulse"], 0.01)
         self.assertAlmostEqual(result["unrecovered_j_per_pulse"], 0.0025)
-        self.assertAlmostEqual(result["input_j_per_rev"], 0.16)
-        self.assertAlmostEqual(result["net_after_input_j_per_rev"], 1.326)
+        self.assertAlmostEqual(result["illustrative_unrecovered_magnetic_energy_j_per_rev"], 0.16)
+        self.assertIsNone(result["input_j_per_rev"])
+        self.assertIsNone(result["net_after_input_j_per_rev"])
+        self.assertFalse(result["performance_claim_eligible"])
 
     def test_angle_in_windows_and_active_eml_index(self):
         windows = [
@@ -89,6 +93,7 @@ class PulseControlTests(unittest.TestCase):
                 "stator_inner_radius_mm": 159.0,
                 "stator_outer_radius_mm": 205.0,
                 "eml_arc_deg": 14.0,
+                "coil_turns": 100,
             }
         )
         self.assertGreater(levels["high"], levels["medium"])
@@ -99,10 +104,35 @@ class PulseControlTests(unittest.TestCase):
             eml_arc_deg=14.0,
         )
         self.assertAlmostEqual(
-            current_from_density_ma_per_mm2(10.0, area),
+            current_from_density_ma_per_mm2(10.0, area, turns=100),
             levels["medium"],
             places=6,
         )
+
+    def test_density_area_is_ampere_turns_and_requires_turns_for_current(self):
+        self.assertEqual(ampere_turns_from_density_ma_per_mm2(10.0, 1000.0), 10.0)
+        self.assertEqual(current_from_density_ma_per_mm2(10.0, 1000.0, turns=100), 0.1)
+        with self.assertRaises(TypeError):
+            current_from_density_ma_per_mm2(10.0, 1000.0)
+        for turns in (0, -1, 1.5, True):
+            with self.subTest(turns=turns), self.assertRaises(ValueError):
+                current_from_density_ma_per_mm2(10.0, 1000.0, turns=turns)
+        with self.assertRaises(ValueError):
+            pulse_current_levels_for_geometry({"stator_inner_radius_mm": 159.0,
+                                               "stator_outer_radius_mm": 205.0, "eml_arc_deg": 14.0})
+
+    def test_event_count_is_gradient_encounters_not_sampled_angles(self):
+        self.assertEqual(count_selected_pulses(rotor_gradient_count=16, eml_count=8), 128)
+        self.assertEqual(count_selected_pulses(rotor_gradient_count=16, eml_count=2,
+                                               selected_events_per_eml=[[0, 3], [1]]), 3)
+        with self.assertRaises(ValueError):
+            count_selected_pulses(rotor_gradient_count=16, eml_count=1,
+                                  selected_events_per_eml=[[1, 1]])
+
+    def test_storage_illustration_rejects_fractional_pulse_events(self):
+        with self.assertRaises(ValueError):
+            estimate_revolution_energy(mechanical_work_j_per_rev=1.0,
+                                       electrical_model=PulseElectricalModel(5.0, 2.0, 0.75, 8, 4.5))
 
 
 if __name__ == "__main__":

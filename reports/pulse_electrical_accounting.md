@@ -1,41 +1,42 @@
 # Pulse Electrical Accounting
 
-**Date:** 2026-06-15
+**Status: insufficient data.**
 
-First-order accounting with **placeholder** coil values. Not measured L/R.
+Actual total input, shaft output per revolution, efficiency, net output and energy-balance closure are unknown.
+The existing data are magnetostatic sector sweeps, without measured electrical waveforms or a verified repeated operating cycle.
 
-## Placeholder Assumptions
+## Winding Excitation
 
-| Parameter | Value | Note |
-|---|---:|---|
-| Coil inductance L | 5.000 mH | PLACEHOLDER |
-| Flyback recovery | 0.750 | PLACEHOLDER |
-| Copper loss fraction of 0.5 L I^2 | 0.050 | PLACEHOLDER |
-| Switching loss per effective pulse | 0.000200 J | PLACEHOLDER |
-| EML count | 8 | from geometry |
-| Current levels (mA/mm^2) | low=5, medium=10, high=20 | mapped via coil area |
+Homogenized current density multiplied by winding-region area gives ampere-turns. Both CSV current headers (`coil_current_a` and `femm_single_turn_current_a`) denote a one-turn FEMM surrogate. Neither establishes physical wire current.
+A physical turn count gives nominal current as ampere-turns divided by turns; actual current still requires measurement.
 
-## Current Levels (from geometry)
+| Level | Density (mA/mm²) | Winding ampere-turns | Nominal wire current (A) |
+|---|---:|---:|---:|
+| low | 5.0 | 3.669 | unknown |
+| medium | 10.0 | 7.338 | unknown |
+| high | 20.0 | 14.675 | unknown |
 
-| Level | Density (mA/mm^2) | Current (A) |
-|---|---:|---:|
-| low | 5.0 | 3.6689 |
-| medium | 10.0 | 7.3377 |
-| high | 20.0 | 14.6754 |
+## Available Sector Diagnostics
 
-## Energy Balance vs Coil-Off Baseline (1.485508 J/rev)
+These values are reported only for complete, ordered, finite 0–45° sweeps. Their numeric precision is not an uncertainty estimate. Full-state periodicity and mesh convergence remain unverified.
 
-| Case | Added mech (J/rev) | Unrecovered input (J/rev) | Copper loss (J/rev) | Switching loss (J/rev) | Total input (J/rev) | Net added after input (J/rev) | Closes? |
-|---|---:|---:|---:|---:|---:|---:|---|
-| low | -0.037641 | 0.287158 | 0.057432 | 0.006827 | 0.351416 | -0.389057 | no |
-| medium | -0.039274 | 1.148630 | 0.229726 | 0.006827 | 1.385183 | -1.424457 | no |
-| high | 0.046917 | 4.594520 | 0.918904 | 0.006827 | 5.520251 | -5.473334 | no |
+| Level | Raw 45° work (J) | Difference from coil-off (J/45°) | Total input | Efficiency | Net output | Energy closure |
+|---|---:|---:|---|---|---|---|
+| low | 0.180983 | -0.004705 | unknown | unknown | unknown | unknown |
+| medium | 0.180779 | -0.004909 | unknown | unknown | unknown | unknown |
+| high | 0.191553 | 0.005865 | unknown | unknown | unknown | unknown |
 
-## Interpretation
+## Required Accounting
 
-- Stored energy per pulse uses 0.5 L I^2 with placeholder L.
-- Unrecovered input is stored energy times (1 - recovery efficiency), scaled by effective pulsed angles.
-- Added mechanical work is coil-on full-rev equivalent minus coil-off baseline.
-- **Do not claim improvement** unless net added work after input is positive and lockout braking did not worsen.
+For one defined system boundary and the same interval:
 
-Replace placeholder L, R, recovery, and switching loss with measured values before design decisions.
+`input energy = useful output energy + losses + change in stored energy`
+
+Closure means that the residual of this balance is consistent with zero within measurement uncertainty. Output exceeding input is not the definition of closure.
+For example, 100 J input, 80 J useful output, 20 J loss and zero stored-energy change close the balance with 80% efficiency and −20 J output minus input.
+
+The quantity `0.5 L I²` describes magnetic energy storage. Multiplying it by an assumed unrecovered fraction and guessed losses does not establish total electrical input. No placeholder loss or recovery estimate is used here.
+Count actual switching events from the controller schedule; an on-angle sample count is neither an event count nor a measured time duty cycle.
+
+Required evidence includes a verified repeated full state, signed bus voltage/current measurements including recovery, all auxiliary and external mechanical inputs, loaded shaft output, losses, and changes in magnetic, electrical, mechanical and thermal energy.
+A positive raw sector difference cannot demonstrate sustained net power exceeding all inputs.
