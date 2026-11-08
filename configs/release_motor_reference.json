@@ -1,0 +1,72 @@
+{
+  "study_title": "Illustrative release-cycle accounting study",
+  "model_status": "illustrative_analytic_reference_not_hardware_prediction",
+  "hardware_validation_status": "not_available",
+  "study_goal": "Assess sustained shaft output greater than all net external input over a repeatable full cycle. Powered operating points are comparisons only; they do not establish self-running or generation.",
+  "motor": {
+    "encounters_per_coil_per_revolution": 16,
+    "coil_count": 16,
+    "resistance_ohm": 55.9,
+    "inductance_h": 0.005,
+    "pm_potential_amplitude_j": 0.002,
+    "pm_flux_linkage_amplitude_wb_turn": 0.005,
+    "bus_voltage_v": 24.0,
+    "design_current_cap_a": 0.43,
+    "max_gate_duty_fraction": 0.10,
+    "return_path_efficiency": 0.75,
+    "controller_power_w": 0.25,
+    "mechanical_loss_power_w": 0.0,
+    "prohibit_overcancellation": true
+  },
+  "parameter_provenance": {
+    "encounters_and_coils": "User's double-sided arrangement: 16 gradients per face, 8 coils per face. Each coil encounters 16 gradients per revolution; 16 coils total. No full 3D magnetic coupling is implied.",
+    "resistance_ohm": "APW EML50mm-24 datasheet 55.9 ohm +/-10% at 20 C; nominal value used, unmeasured on user's unit.",
+    "bus_voltage_v": "APW EML50mm-24 nominal 24 VDC, used here as ideal bridge voltage ceiling with zero reserved switching margin.",
+    "design_current_cap_a": "0.43 A is the published rated current, adopted as a no-overdrive design cap; it is not a manufacturer certified peak pulse limit.",
+    "max_gate_duty_fraction": "10% is published actuator metadata, adopted as a reference gate limit only. It does not qualify high-frequency motor operation. Thermal assessment must include all coil i^2 R heating, including hold, freewheel and decay current; gate duty and PWM switching fraction are not interchangeable.",
+    "inductance_h": "ILLUSTRATIVE 5 mH assumption; not measured or extracted from APW or FEMM.",
+    "pm_potential_amplitude_j": "ILLUSTRATIVE analytic 2 mJ potential per coil; not fitted to a FEMM cycle bias, holding force, or output claim.",
+    "pm_flux_linkage_amplitude_wb_turn": "ILLUSTRATIVE analytic 5 mWb-turn coupling; not measured or extracted from FEMM. With the chosen potential, 0.4 A gives instantaneous full cancellation at pulse peak.",
+    "return_path_efficiency": "ILLUSTRATIVE 75% of actually negative terminal energy reaches a receptive DC bus; not a device specification or an assumed deduction of all stored inductive energy.",
+    "controller_power_w": "ILLUSTRATIVE 0.25 W total system overhead, counted once per rotor revolution.",
+    "mechanical_loss_power_w": "Optimistic zero drag assumption to isolate electromechanical accounting; there is no validated shaft-output or thermal model.",
+    "bridge_losses": "Ideal forward conversion, zero switching/conduction losses and no dead-time voltage margin; optimistic modeling assumptions. Return loss and controller draw are included."
+  },
+  "sweep": {
+    "rpm": [500, 1000, 3500],
+    "peak_current_a": [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40],
+    "center_phase_fraction_of_pi": [0.14, 0.20, 0.26, 0.32, 0.38, 0.44, 0.50, 0.56, 0.62, 0.68, 0.74, 0.80, 0.86],
+    "width_phase_fraction_of_pi": [0.04, 0.08, 0.12, 0.16, 0.20],
+    "intervals_per_encounter": 4096,
+    "verification_intervals_per_encounter": 32768
+  },
+  "target": {
+    "shaft_power_w": 350.0,
+    "rpm": 1000.0,
+    "interpretation": "Historical 350 W at 1000 rpm comparison only, not a prediction or the user's governing objective. Evaluate feasible sampled commands in the illustrative model. A failed sweep is not a proof about all possible hardware; a passing sweep would not be hardware validation."
+  },
+  "sensitivity_check": {
+    "resistance_tolerance_fraction": 0.10,
+    "illustrative_coil_temperature_c": 80.0,
+    "copper_alpha_per_c": 0.00393,
+    "reference_temperature_c": 20.0,
+    "note": "Sensitivity only. 80 C is an assumed test corner, not an APW allowed winding temperature or established equilibrium. Flux, inductance, coercivity and heat transfer are held unchanged, so this is not a complete temperature model."
+  },
+  "sources": [
+    {
+      "title": "MIT 6.061, Chapter 8: Electromagnetic forces and loss mechanisms",
+      "url": "https://ocw.mit.edu/courses/6-061-introduction-to-electric-power-systems-spring-2011/c26f6204e05bd4c47875a96452982b6f_MIT6_061S11_ch8.pdf",
+      "use": "Energy/coenergy treatment of force, torque, electrical and mechanical energy ports."
+    },
+    {
+      "title": "APW EML50mm-24 drawing 6681",
+      "url": "https://apwcompany.com/cdn/shop/files/6681.pdf?v=16184353028769850943",
+      "use": "24 VDC, 0.43 A, 55.9 ohm +/-10% at 20 C, 10.3 W energized and 10% intermittent duty."
+    },
+    {
+      "title": "APW permanent electromagnets",
+      "url": "https://apwcompany.com/collections/permanent-electromagnets",
+      "use": "Permanent holding without electrical power; applying electrical power releases. This does not establish a zero-power latched release state."
+    }
+  ]
+}

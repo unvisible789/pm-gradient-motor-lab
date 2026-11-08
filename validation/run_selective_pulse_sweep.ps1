@@ -12,6 +12,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $env:PYTHONPATH = "."
+Write-Warning "Legacy quasistatic positive-window assist screen: one-turn FEMM surrogate, not a timed-release dynamic model or energy-generation test. Active 45-degree state periodicity is unverified."
 
 function Convert-ToFemPath([string]$PathValue) {
     return ($PathValue -replace "\\", "/")
@@ -34,23 +35,27 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $levelsJson = python -c @"
 import json
 from pathlib import Path
-from validation.pulse_control import load_pulse_windows, pulse_current_levels_for_geometry
+from validation.pulse_control import load_pulse_windows, eml_coil_area_mm2, ampere_turns_from_density_ma_per_mm2, PULSE_CURRENT_LEVELS
 root = Path('.')
 config = json.loads((root / '$VariantConfig').read_text(encoding='utf-8'))
 assist, lockout = load_pulse_windows(root / '$PulseStrategy')
-levels = pulse_current_levels_for_geometry(config)
+area = eml_coil_area_mm2(stator_inner_radius_mm=float(config['stator_inner_radius_mm']), stator_outer_radius_mm=float(config['stator_outer_radius_mm']), eml_arc_deg=float(config['eml_arc_deg']))
+# The generator assigns one turn to each surrogate FEMM region. J*area gives
+# equivalent ampere-turns, NOT the physical APW winding current.
+levels = {name: ampere_turns_from_density_ma_per_mm2(density, area) for name, density in PULSE_CURRENT_LEVELS.items()}
 print(json.dumps({
     'assist_windows': assist,
     'lockout_windows': lockout,
-    'current_levels_a': levels,
+    'single_turn_equivalent_current_a': levels,
     'eml_count': int(config['eml_unit_count']),
     'eml_offset_deg': float(config['eml_angular_offset_deg']),
     'period_deg': 45.0,
 }))
 "@
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $payload = $levelsJson | ConvertFrom-Json
 $assistWindows = @($payload.assist_windows)
-$currentLevels = $payload.current_levels_a
+$currentLevels = $payload.single_turn_equivalent_current_a
 $emlCount = [int]$payload.eml_count
 $emlOffset = [double]$payload.eml_offset_deg
 $periodDeg = [double]$payload.period_deg
@@ -59,7 +64,7 @@ $pulseCurrentA = 0.0
 if ($PulseLevel -ne "coiloff") {
     $pulseCurrentA = [double]$currentLevels.$PulseLevel
 }
-Write-Output ("Pulse level={0} current_a={1}" -f $PulseLevel, $pulseCurrentA)
+Write-Output ("Pulse level={0} FEMM one-turn equivalent current_a={1}; physical winding current unknown" -f $PulseLevel, $pulseCurrentA)
 
 function Test-InAssistWindow([double]$AngleDeg) {
     $local = $AngleDeg % $periodDeg
@@ -96,7 +101,7 @@ if ($RebuildGeometry) {
 }
 
 Invoke-Femm $femm ('open("' + $baseFem + '")') | Out-Null
-"angle_deg,torque_nm,coil_current_a,active_eml,pulse_on" | Set-Content -Path $outputPath -Encoding ASCII
+"angle_deg,torque_nm,femm_single_turn_current_a,active_eml,pulse_on" | Set-Content -Path $outputPath -Encoding ASCII
 
 $previousAngle = $MinAngleDeg
 $start = Get-Date
@@ -114,14 +119,14 @@ for ($i = 0; $i -le $count; $i++) {
     }
 
     for ($circuit = 0; $circuit -lt $emlCount; $circuit++) {
-        Invoke-Femm $femm ('mi_modifycircprop("EML' + $circuit + '","i",0)') | Out-Null
+        Invoke-Femm $femm ('mi_modifycircprop("EML' + $circuit + '",1,0)') | Out-Null
     }
 
     $pulseOn = 0
     $activeEml = Get-ActiveEmlIndex $angle
     $appliedCurrent = 0.0
     if ($pulseCurrentA -gt 0 -and (Test-InAssistWindow $angle)) {
-        Invoke-Femm $femm ('mi_modifycircprop("EML' + $activeEml + '","i",' + $pulseCurrentA.ToString("G17", [Globalization.CultureInfo]::InvariantCulture) + ')') | Out-Null
+        Invoke-Femm $femm ('mi_modifycircprop("EML' + $activeEml + '",1,' + $pulseCurrentA.ToString("G17", [Globalization.CultureInfo]::InvariantCulture) + ')') | Out-Null
         $pulseOn = 1
         $appliedCurrent = $pulseCurrentA
     }

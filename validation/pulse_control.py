@@ -29,20 +29,52 @@ def eml_coil_area_mm2(
     return (math.pi / 360.0) * arc_deg * (coil_outer**2 - coil_inner**2)
 
 
-def current_from_density_ma_per_mm2(density_ma_per_mm2: float, coil_area_mm2: float) -> float:
+def ampere_turns_from_density_ma_per_mm2(density_ma_per_mm2: float, coil_area_mm2: float) -> float:
+    """Return homogenized winding ampere-turns, not conductor current."""
+    if not all(math.isfinite(x) for x in (density_ma_per_mm2, coil_area_mm2)) or coil_area_mm2 <= 0:
+        raise ValueError("Density must be finite and coil area must be positive and finite")
     return density_ma_per_mm2 * coil_area_mm2 / 1000.0
 
 
-def pulse_current_levels_for_geometry(config: dict[str, float]) -> dict[str, float]:
+def current_from_density_ma_per_mm2(density_ma_per_mm2: float, coil_area_mm2: float, *, turns: int) -> float:
+    """Convert homogenized J times winding area to wire A with explicit turns."""
+    if isinstance(turns, bool) or not isinstance(turns, int) or turns <= 0:
+        raise ValueError("A positive integer winding turn count is required")
+    return ampere_turns_from_density_ma_per_mm2(density_ma_per_mm2, coil_area_mm2) / turns
+
+
+def pulse_current_levels_for_geometry(config: dict) -> dict[str, float]:
+    if "coil_turns" not in config:
+        raise ValueError("coil_turns is missing; homogenized density times area is ampere-turns, not wire amperes")
     area = eml_coil_area_mm2(
         stator_inner_radius_mm=float(config["stator_inner_radius_mm"]),
         stator_outer_radius_mm=float(config["stator_outer_radius_mm"]),
         eml_arc_deg=float(config["eml_arc_deg"]),
     )
-    return {
-        level: current_from_density_ma_per_mm2(density, area)
-        for level, density in PULSE_CURRENT_LEVELS.items()
-    }
+    return {level: current_from_density_ma_per_mm2(density, area, turns=config["coil_turns"])
+            for level, density in PULSE_CURRENT_LEVELS.items()}
+
+
+def count_selected_pulses(*, rotor_gradient_count: int, eml_count: int,
+                          selected_events_per_eml: list[list[int]] | None = None) -> int:
+    """Count selected gradient encounters per coil in one mechanical revolution.
+
+    Event indices identify encounters, not sampled angles or an EML/gradient ratio.
+    Omitting the selection explicitly assumes one pulse at every encounter.
+    """
+    for value in (rotor_gradient_count, eml_count):
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError("Gradient and coil counts must be positive integers")
+    if selected_events_per_eml is None:
+        return rotor_gradient_count * eml_count
+    if len(selected_events_per_eml) != eml_count:
+        raise ValueError("Provide one selected-event list for every coil")
+    for events in selected_events_per_eml:
+        if any(isinstance(e, bool) or not isinstance(e, int) or not 0 <= e < rotor_gradient_count for e in events):
+            raise ValueError("Selected gradient event index is invalid")
+        if len(set(events)) != len(events):
+            raise ValueError("Duplicate selected gradient encounter")
+    return sum(len(events) for events in selected_events_per_eml)
 
 
 def angle_mod(angle_deg: float, period_deg: float) -> float:
@@ -131,26 +163,33 @@ def build_phase_schedule(
     return [_rounded(window) for window in schedule]
 
 
-def estimate_revolution_energy(
-    *,
-    mechanical_work_j_per_rev: float,
-    electrical_model: PulseElectricalModel,
-) -> dict[str, float]:
-    stored_j = (
-        0.5
-        * (electrical_model.coil_inductance_mh / 1000.0)
-        * electrical_model.pulse_current_a**2
-    )
-    unrecovered_j = stored_j * (1.0 - electrical_model.recovery_efficiency)
-    pulse_count = electrical_model.eml_count * electrical_model.pulses_per_eml_per_rev
-    input_j = unrecovered_j * pulse_count
+def estimate_revolution_energy(*, mechanical_work_j_per_rev: float, electrical_model: PulseElectricalModel) -> dict:
+    """Deprecated magnetic-storage illustration, never a motor input-energy model.
+
+    One half L I squared is stored field energy. Motion-induced voltage, copper
+    heating, switching loss and auxiliary power are absent from this model.
+    """
+    m = electrical_model
+    values = (m.coil_inductance_mh, m.pulse_current_a, m.recovery_efficiency,
+              m.eml_count, m.pulses_per_eml_per_rev, mechanical_work_j_per_rev)
+    if not all(math.isfinite(x) for x in values):
+        raise ValueError("Energy illustration inputs must be finite")
+    if m.coil_inductance_mh < 0 or m.pulse_current_a < 0 or not 0 <= m.recovery_efficiency <= 1:
+        raise ValueError("Invalid inductance, current or recovery fraction")
+    if m.eml_count <= 0 or int(m.eml_count) != m.eml_count or m.pulses_per_eml_per_rev < 0 or int(m.pulses_per_eml_per_rev) != m.pulses_per_eml_per_rev:
+        raise ValueError("Coil and per-coil event counts must be whole numbers")
+    stored = 0.5 * (m.coil_inductance_mh / 1000.0) * m.pulse_current_a ** 2
+    unrecovered = stored * (1.0 - m.recovery_efficiency)
+    count = int(m.eml_count * m.pulses_per_eml_per_rev)
     return {
-        "stored_j_per_pulse": stored_j,
-        "unrecovered_j_per_pulse": unrecovered_j,
-        "pulse_count_per_rev": pulse_count,
-        "input_j_per_rev": input_j,
+        "status": "illustrative", "performance_claim_eligible": False,
+        "stored_j_per_pulse": stored, "unrecovered_j_per_pulse": unrecovered,
+        "pulse_count_per_rev": count,
+        "illustrative_unrecovered_magnetic_energy_j_per_rev": unrecovered * count,
+        "input_j_per_rev": None,
         "mechanical_work_j_per_rev": mechanical_work_j_per_rev,
-        "net_after_input_j_per_rev": mechanical_work_j_per_rev - input_j,
+        "net_after_input_j_per_rev": None,
+        "limitation": "Stored magnetic energy is not total electrical input; use signed measured bus waveforms and a full-cycle storage ledger.",
     }
 
 
